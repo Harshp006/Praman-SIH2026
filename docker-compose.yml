@@ -1,0 +1,92 @@
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: praman_postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: praman
+      POSTGRES_PASSWORD: praman_local
+      POSTGRES_DB: praman
+    ports:
+      - "7432:5432"  # host 7432 → container 5432 (avoids conflict with local postgres)
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U praman -d praman"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  ollama:
+    image: ollama/ollama:latest
+    container_name: praman_ollama
+    restart: unless-stopped
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+    # Pull llama3.2 on first boot (best-effort; API degrades gracefully if not ready)
+    entrypoint: >
+      sh -c "ollama serve &
+             sleep 5 &&
+             ollama pull llama3.2 || true &&
+             wait"
+
+  backend:
+    build: ./backend
+    container_name: praman_backend
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      ollama:
+        condition: service_started
+    environment:
+      DATABASE_URL: "postgresql://praman:praman_local@praman_postgres:5432/praman?schema=public"
+      NODE_ENV: development
+      JWT_SECRET: "praman_jwt_secret_change_in_prod"
+      JWT_EXPIRES_IN: "8h"
+      OLLAMA_BASE_URL: "http://ollama:11434"
+      OLLAMA_MODEL: "llama3.2"
+      PORT: "4000"
+    ports:
+      - "8081:4000"  # host 8081 → container 4000
+    command: >
+      sh -c "
+        npx prisma db push --skip-generate &&
+        node src/seed-if-empty.js &&
+        node src/index.js
+      "
+
+  frontend:
+    build: ./frontend
+    container_name: praman_frontend
+    restart: unless-stopped
+    depends_on:
+      - backend
+    ports:
+      - "8082:3000"  # host 8082 → container 3000
+    # CMD intentionally left as Dockerfile default — Layer 3 will override
+
+  # Prisma Studio — browse DB at http://localhost:8555
+  prisma-studio:
+    build: ./backend
+    container_name: praman_prisma_studio
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: "postgresql://praman:praman_local@praman_postgres:5432/praman?schema=public"
+    ports:
+      - "8555:5555"  # host 8555 → container 5555
+    command: >
+      sh -c "npx prisma studio --port 5555 --hostname 0.0.0.0"
+
+volumes:
+  postgres_data:
+    name: praman_postgres_data
+  ollama_data:
+    name: praman_ollama_data

@@ -1,0 +1,236 @@
+/* 
+  Praman Design System
+  A clean, pastel, government-friendly aesthetic 
+*/
+
+:root {
+  /* Soft backgrounds */
+  --bg-page: #f8fafc;
+  --bg-card: #ffffff;
+  --bg-subtle: #f1f5f9;
+  
+  /* Text */
+  --text-main: #0f172a;
+  --text-muted: #64748b;
+  
+  /* Borders */
+  --border-light: #e2e8f0;
+  
+  /* Pastels for Status/Risk */
+  /* Primary */
+  --primary-light: #eff6ff;
+  --primary-main: #3b82f6;
+  --primary-hover: #2563eb;
+  
+  /* Success (Pass / Approved / Low Risk) */
+  --success-light: #f0fdf4;
+  --success-border: #bbf7d0;
+  --success-text: #166534;
+  --success-solid: #22c55e;
+  
+  /* Warning (Warn / Under Review / Medium Risk) */
+  --warning-light: #fefce8;
+  --warning-border: #fef08a;
+  --warning-text: #854d0e;
+  --warning-solid: #eab308;
+  
+  /* Danger (Fail / Rejected / High Risk) */
+  --danger-light: #fef2f2;
+  --danger-border: #fecaca;
+  --danger-text: #991b1b;
+  --danger-solid: #ef4444;
+
+  /* Shadows */
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+
+  /* Radius */
+  --radius-md: 8px;
+  --radius-lg: 12px;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  background-color: var(--bg-page);
+  color: var(--text-main);
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+a {
+  text-decoration: none;
+  color: inherit;
+}
+
+/* Typography Utilities */
+.h1 { font-size: 2rem; font-weight: 700; color: var(--text-main); }
+.h2 { font-size: 1.5rem; font-weight: 600; color: var(--text-main); }
+.h3 { font-size: 1.25rem; font-weight: 600; color: var(--text-main); }
+.text-muted { color: var(--text-muted); }
+.text-sm { font-size: 0.875rem; }
+.text-xs { font-size: 0.75rem; }
+.font-medium { font-weight: 500; }
+.font-semibold { font-weight: 600; }
+
+/* Layout Utilities */
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 1.5rem;
+}
+
+.flex { display: flex; }
+.items-center { align-items: center; }
+.justify-between { justify-content: space-between; }
+.justify-center { justify-content: center; }
+.gap-2 { gap: 0.5rem; }
+.gap-4 { gap: 1rem; }
+.gap-6 { gap: 1.5rem; }
+.grid { display: grid; }
+
+/* Card Style */
+.card {
+  background-color: var(--bg-card);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--border-light);
+  overflow: hidden;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.card-hoverable:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+.card-header {
+  padding: 1.25rem 1.5rem;
+  border-bottom: 1px solid var(--border-light);
+  background-color: var(--bg-card);
+}
+
+.card-body {
+  padding: 1.5rem;
+}
+
+/* Button Style */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.625rem 1rem;
+  border-radius: var(--radius-md);
+  font-weight: 500;
+  font-size: 0.875rem;
+  border: none;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  font-family: inherit;
+}
+
+.btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.btn-primary {
+  background-color: var(--primary-main);
+  color: white;
+}
+.btn-primary:hover:not(:disabled) {
+  background-color: var(--primary-hover);
+}
+
+.btn-outline {
+  background-color: transparent;
+  border: 1px solid var(--border-light);
+  color: var(--text-main);
+}
+.btn-outline:hover:not(:disabled) {
+  background-color: var(--bg-subtle);
+}
+
+.btn-success {
+  background-color: var(--success-solid);
+  color: white;
+}
+.btn-success:hover:not(:disabled) {
+  opacity: 0.9;
+}
+
+.btn-danger {
+  background-color: var(--danger-solid);
+  color: white;
+}
+.btn-danger:hover:not(:disabled) {
+  opacity: 0.9;
+}
+
+.btn-warning {
+  background-color: var(--warning-solid);
+  color: white;
+}
+.btn-warning:hover:not(:disabled) {
+  opacity: 0.9;
+}
+
+/* Form Inputs */
+.input {
+  width: 100%;
+  padding: 0.625rem 0.75rem;
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-md);
+  font-family: inherit;
+  font-size: 0.875rem;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.input:focus {
+  outline: none;
+  border-color: var(--primary-main);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+/* Badge (Shared styles) */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.25rem 0.625rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: capitalize;
+}
+
+/* Loading Spinner */
+.spinner {
+  width: 1.5rem;
+  height: 1.5rem;
+  border: 3px solid rgba(0,0,0,0.1);
+  border-top-color: var(--primary-main);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Utility Layouts */
+.mb-1 { margin-bottom: 0.25rem; }
+.mb-2 { margin-bottom: 0.5rem; }
+.mb-4 { margin-bottom: 1rem; }
+.mb-6 { margin-bottom: 1.5rem; }
+.mb-8 { margin-bottom: 2rem; }
+.mt-4 { margin-top: 1rem; }
+.mt-8 { margin-top: 2rem; }
+
+.py-8 { padding-top: 2rem; padding-bottom: 2rem; }

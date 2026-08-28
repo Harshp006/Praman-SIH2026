@@ -1,0 +1,80 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Officer {
+  id           String     @id @default(cuid())
+  email        String     @unique
+  passwordHash String
+  name         String
+  createdAt    DateTime   @default(now())
+
+  // Back-relation: actions taken by this officer
+  auditLogs    AuditLog[]
+}
+
+model Bidder {
+  id             String    @id @default(cuid())
+  name           String
+  gstin          String
+  pan            String
+  udyam          String
+  tenderId       String
+  tenderName     String
+  score          Int       @default(0)
+  risk           String    @default("pending")
+  status         String    @default("under_review")
+  hardGated      Boolean   @default(false)
+  recommendation String?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  documents Document[]
+  checks    Check[]
+  auditLogs AuditLog[]
+}
+
+model Document {
+  id       String @id @default(cuid())
+  bidderId String
+  type     String // PAN / GST / UDYAM
+  fileName String
+
+  bidder Bidder @relation(fields: [bidderId], references: [id])
+}
+
+model Check {
+  id        String   @id @default(cuid())
+  bidderId  String
+  label     String
+  category  String   // "statutory" or "tender_specific"
+  state     String   // pass / warn / missing / fail / na
+  live      Boolean
+  note      String
+  weight    Int
+  createdAt DateTime @default(now())
+
+  bidder Bidder @relation(fields: [bidderId], references: [id])
+}
+
+model AuditLog {
+  id        String   @id @default(cuid())
+  bidderId  String
+  // officerId is null for system-generated entries (verification runs).
+  // Layer 2 must populate this from the JWT when an officer takes an action.
+  officerId String?
+  actor     String   // "system" for automated checks; officer name for human actions
+  action    String
+  timestamp DateTime @default(now())
+
+  bidder  Bidder   @relation(fields: [bidderId], references: [id])
+  officer Officer? @relation(fields: [officerId], references: [id])
+}
