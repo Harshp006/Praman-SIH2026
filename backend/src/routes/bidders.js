@@ -179,9 +179,13 @@ router.post("/", requireAuth, (req, res, next) => {
     if (uploadErr) return res.status(400).json({ error: uploadErr.message });
 
     try {
-      const { name, gstin, pan, udyam, tenderId, tenderName } = req.body;
-      const missing = ["name","gstin","pan","udyam","tenderId","tenderName"].filter(f => !req.body[f]);
+      const { name, gstin, pan, udyam, tenderId } = req.body;
+      const missing = ["name","gstin","pan","udyam","tenderId"].filter(f => !req.body[f]);
       if (missing.length) return res.status(400).json({ error: "Missing fields: " + missing.join(", ") });
+
+      // Ensure tender exists
+      const tender = await prisma.tender.findUnique({ where: { tenderId } });
+      if (!tender) return res.status(400).json({ error: "Tender ID not found." });
 
       const bidder = await prisma.bidder.create({
         data: {
@@ -189,8 +193,8 @@ router.post("/", requireAuth, (req, res, next) => {
           gstin: gstin.trim().toUpperCase(),
           pan:   pan.trim().toUpperCase(),
           udyam: udyam.trim().toUpperCase(),
-          tenderId:   tenderId.trim(),
-          tenderName: tenderName.trim(),
+          tenderId: tender.tenderId,
+          tenderName: tender.name,
           status: "pending_review",
           createdById: req.officer.id,
         },
@@ -371,13 +375,16 @@ router.put("/:id", requireAuth, async (req, res, next) => {
     const bidder = await prisma.bidder.findUnique({ where: { id: req.params.id } });
     if (!bidder) return notFound(res, req.params.id);
 
-    const { name, tenderId, tenderName } = req.body;
-    if (!name || !tenderId || !tenderName)
-      return res.status(400).json({ error: "name, tenderId, and tenderName are required." });
+    const { name, tenderId } = req.body;
+    if (!name || !tenderId)
+      return res.status(400).json({ error: "name and tenderId are required." });
+
+    const tender = await prisma.tender.findUnique({ where: { tenderId } });
+    if (!tender) return res.status(400).json({ error: "Tender ID not found." });
 
     const updated = await prisma.bidder.update({
       where: { id: req.params.id },
-      data:  { name: name.trim(), tenderId: tenderId.trim(), tenderName: tenderName.trim() },
+      data:  { name: name.trim(), tenderId: tender.tenderId, tenderName: tender.name },
       include: {
         checks:    { orderBy: { createdAt: "asc" } },
         documents: true,
@@ -390,7 +397,7 @@ router.put("/:id", requireAuth, async (req, res, next) => {
         bidderId:  bidder.id,
         officerId: req.officer.id,
         actor:     req.officer.name,
-        action:    `Profile updated by ${req.officer.name}: name="${name.trim()}", tenderId="${tenderId.trim()}", tenderName="${tenderName.trim()}"`,
+        action:    `Profile updated by ${req.officer.name}: name="${name.trim()}", tenderId="${tender.tenderId}"`,
       },
     });
 
@@ -450,6 +457,29 @@ router.post("/:id/decision", requireAuth, async (req, res, next) => {
         action:    actionDesc + (note ? ` Note: ${note}` : ""),
       },
     });
+
+    // AUTO REJECT LOGIC
+    if (action === "approve") {
+      const otherBidders = await prisma.bidder.findMany({
+        where: { tenderId: bidder.tenderId, status: "pending_review", id: { not: bidder.id } }
+      });
+      
+      if (otherBidders.length > 0) {
+        await prisma.bidder.updateMany({
+          where: { tenderId: bidder.tenderId, status: "pending_review", id: { not: bidder.id } },
+          data: { status: "rejected" }
+        });
+
+        const auditLogs = otherBidders.map(ob => ({
+          bidderId: ob.id,
+          officerId: req.officer.id,
+          actor: "System",
+          action: `Auto-rejected because bidder ${bidder.name} was approved for this tender.`
+        }));
+
+        await prisma.auditLog.createMany({ data: auditLogs });
+      }
+    }
 
     res.json({ message: `Bid ${action}d successfully.`, id: bidder.id, status: newStatus });
   } catch (err) { next(err); }

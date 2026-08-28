@@ -11,16 +11,25 @@ const EditBidder = () => {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
-  const [form, setForm] = useState({ name: '', tenderId: '', tenderName: '' });
+  const [form, setForm] = useState({ name: '', tenderId: '' });
+  const [tenders, setTenders] = useState([]);
+  const [tendersLoading, setTendersLoading] = useState(true);
 
   useEffect(() => {
-    api.get(`/bidders/${id}`)
-      .then(res => {
-        setBidder(res.data);
-        setForm({ name: res.data.name, tenderId: res.data.tenderId, tenderName: res.data.tenderName });
+    Promise.all([
+      api.get(`/bidders/${id}`),
+      api.get('/tenders')
+    ])
+      .then(([bidderRes, tendersRes]) => {
+        setBidder(bidderRes.data);
+        setForm({ name: bidderRes.data.name, tenderId: bidderRes.data.tenderId });
+        setTenders(tendersRes.data || []);
       })
-      .catch(() => setError('Failed to load bidder.'))
-      .finally(() => setLoading(false));
+      .catch(() => setError('Failed to load data.'))
+      .finally(() => {
+        setLoading(false);
+        setTendersLoading(false);
+      });
   }, [id]);
 
   const set = (k) => (e) => setForm(prev => ({ ...prev, [k]: e.target.value }));
@@ -28,6 +37,12 @@ const EditBidder = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
+    
+    if (!form.tenderId) {
+      setError('Please select a Tender.');
+      return;
+    }
+
     setSaving(true);
     try {
       await api.put(`/bidders/${id}`, form);
@@ -78,16 +93,22 @@ const EditBidder = () => {
 
             <div>
               <label className="text-xs font-bold mb-1 block uppercase text-muted">
-                Tender ID <span style={{ color: 'var(--status-rejected)' }}>*</span>
+                Select Tender <span style={{ color: 'var(--status-rejected)' }}>*</span>
               </label>
-              <input type="text" className="input" value={form.tenderId} onChange={set('tenderId')} required placeholder="e.g. GEM/2026/B/1234567" />
-            </div>
-
-            <div>
-              <label className="text-xs font-bold mb-1 block uppercase text-muted">
-                Tender Name <span style={{ color: 'var(--status-rejected)' }}>*</span>
-              </label>
-              <input type="text" className="input" value={form.tenderName} onChange={set('tenderName')} required />
+              <select 
+                className="input" 
+                value={form.tenderId} 
+                onChange={set('tenderId')} 
+                required
+                disabled={tendersLoading}
+              >
+                <option value="">-- SELECT TENDER --</option>
+                {tenders.map(t => (
+                  <option key={t.id} value={t.tenderId}>
+                    {t.name} ({t.tenderId})
+                  </option>
+                ))}
+              </select>
             </div>
 
             <div style={{ borderTop: '1px solid var(--border)', paddingTop: '1rem' }}>

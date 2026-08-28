@@ -39,9 +39,20 @@ model Bidder {
   updatedAt      DateTime  @updatedAt
 
   createdBy Officer    @relation(fields: [createdById], references: [id])
+  tender    Tender     @relation(fields: [tenderId], references: [tenderId])
   documents Document[]
   checks    Check[]
   auditLogs AuditLog[]
+}
+
+model Tender {
+  id          String   @id @default(cuid())
+  tenderId    String   @unique
+  name        String
+  description String?
+  createdAt   DateTime @default(now())
+
+  bidders     Bidder[]
 }
 
 model Document {

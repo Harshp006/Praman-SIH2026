@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { PlusCircle, Info, Upload, CheckCircle, AlertCircle } from 'lucide-react';
 import api from '../api';
@@ -25,14 +25,30 @@ const FileBox = ({ label, name, fileRef, fileName, onChange }) => (
 
 const AddBidder = () => {
   const navigate = useNavigate();
-  const [formData, setFormData] = useState({ name: '', gstin: '', pan: '', udyam: '', tenderId: '', tenderName: '' });
+  const [formData, setFormData] = useState({ name: '', gstin: '', pan: '', udyam: '', tenderId: '' });
+  const [tenders, setTenders] = useState([]);
   const [fileNames, setFileNames] = useState({ pan_file: '', gst_file: '', udyam_file: '' });
   const [loading, setLoading] = useState(false);
+  const [tendersLoading, setTendersLoading] = useState(true);
   const [error, setError] = useState('');
 
   const panRef   = useRef();
   const gstRef   = useRef();
   const udyamRef = useRef();
+
+  useEffect(() => {
+    api.get('/tenders')
+      .then(res => {
+        setTenders(res.data || []);
+      })
+      .catch(err => {
+        console.error('Failed to load tenders:', err);
+        setError('Failed to load tenders list. Please try again.');
+      })
+      .finally(() => {
+        setTendersLoading(false);
+      });
+  }, []);
 
   const handleFileChange = (e) => {
     const { name, files } = e.target;
@@ -46,6 +62,12 @@ const AddBidder = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
+    
+    if (!formData.tenderId) {
+      setError('Please select a Tender.');
+      return;
+    }
+
     setLoading(true);
 
     try {
@@ -112,17 +134,23 @@ const AddBidder = () => {
               </div>
               <div>
                 <label className="text-xs font-bold mb-1 block uppercase text-muted">
-                  Tender Name <span style={{ color: 'var(--status-rejected)' }}>*</span>
+                  Select Tender <span style={{ color: 'var(--status-rejected)' }}>*</span>
                 </label>
-                <input type="text" className="input" value={formData.tenderName} onChange={set('tenderName')} required placeholder="e.g. Supply of IT Equipment" />
-                <div className="text-xs text-muted mt-1 font-bold uppercase">Full title of the GeM bid</div>
-              </div>
-              <div>
-                <label className="text-xs font-bold mb-1 block uppercase text-muted">
-                  Tender ID <span style={{ color: 'var(--status-rejected)' }}>*</span>
-                </label>
-                <input type="text" className="input" value={formData.tenderId} onChange={set('tenderId')} required placeholder="e.g. GEM/2026/B/1234567" />
-                <div className="text-xs text-muted mt-1 font-bold uppercase">GeM bid reference number</div>
+                <select 
+                  className="input" 
+                  value={formData.tenderId} 
+                  onChange={set('tenderId')} 
+                  required
+                  disabled={tendersLoading}
+                >
+                  <option value="">-- SELECT TENDER --</option>
+                  {tenders.map(t => (
+                    <option key={t.id} value={t.tenderId}>
+                      {t.name} ({t.tenderId})
+                    </option>
+                  ))}
+                </select>
+                <div className="text-xs text-muted mt-1 font-bold uppercase">Select the active GeM bid reference</div>
               </div>
             </div>
           </div>
@@ -162,7 +190,7 @@ const AddBidder = () => {
 
         <div className="flex justify-end gap-3">
           <button type="button" className="btn btn-outline" onClick={() => navigate('/')} disabled={loading}>CANCEL</button>
-          <button type="submit" className="btn btn-primary" disabled={loading} style={{ minWidth: '200px' }}>
+          <button type="submit" className="btn btn-primary" disabled={loading || tendersLoading} style={{ minWidth: '200px' }}>
             {loading ? (
               <span className="flex items-center gap-2">
                 <span className="spinner" style={{ width: '14px', height: '14px', borderWidth: '2px' }}></span>

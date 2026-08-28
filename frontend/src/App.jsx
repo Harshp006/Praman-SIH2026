@@ -6,6 +6,7 @@ import BidderView from './pages/BidderView';
 import AddBidder from './pages/AddBidder';
 import AuditTrail from './pages/AuditTrail';
 import EditBidder from './pages/EditBidder';
+import TenderView from './pages/TenderView';
 import Navbar from './components/Navbar';
 import api from './api';
 import './index.css';
@@ -85,6 +86,7 @@ function App() {
             <Route path="/" element={<Dashboard />} />
             <Route path="/add-bidder" element={<AddBidder />} />
             <Route path="/audit-trail" element={<AuditTrail />} />
+            <Route path="/tenders/:tenderId" element={<TenderView />} />
             <Route path="/bidders/:id" element={<BidderView />} />
             <Route path="/bidders/:id/edit" element={<EditBidder />} />
           </Route>

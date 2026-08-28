@@ -18,6 +18,7 @@ const errorHandler = require("./middleware/errorHandler");
 const authRoutes   = require("./routes/auth");
 const bidderRoutes = require("./routes/bidders");
 const dashRoutes   = require("./routes/dashboard");
+const tenderRoutes = require("./routes/tenders");
 const { isOllamaReady } = require("./engines/ollama");
 
 const { PrismaClient } = require("@prisma/client");
@@ -46,6 +47,7 @@ app.use("/uploads", express.static(config.UPLOADS_DIR));
 app.use("/auth",          authRoutes);   // spec-correct prefix
 app.use("/api/auth",      authRoutes);   // backward-compat prefix for existing frontend
 app.use("/api/bidders",   bidderRoutes);
+app.use("/api/tenders",   tenderRoutes);
 app.use("/api/dashboard", dashRoutes);
 
 /**

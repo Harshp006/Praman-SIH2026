@@ -132,9 +132,10 @@ function generateUdyam(i) {
   return `UDYAM-${stateCode}-0${num}`;
 }
 
-function generateTenderId(i) {
-  const year = 2025 + (i % 2);
-  const num = String(i + 1000000);
+// We will use 25 distinct Tenders instead of generating a new one for each bidder
+function getTenderId(index) {
+  const year = 2025 + (index % 2);
+  const num = String(index + 1000000);
   return `GEM/${year}/B/${num}`;
 }
 
@@ -236,19 +237,28 @@ async function seedBidders() {
     process.exit(1);
   }
 
+  console.log(`[Seed] Seeding 25 Tenders...`);
+  const tenders = [];
+  for (let i = 0; i < TENDER_NAMES.length; i++) {
+    const tenderId = getTenderId(i);
+    const tender = await prisma.tender.upsert({
+      where: { tenderId },
+      update: {},
+      create: {
+        tenderId,
+        name: TENDER_NAMES[i],
+        description: `Procurement process for ${TENDER_NAMES[i]}`
+      }
+    });
+    tenders.push(tender);
+  }
+
   console.log(`[Seed] Seeding 300 realistic Indian bidders...`);
 
   const TOTAL = 300;
-  // Distribution: 40% approved, 35% pending, 25% rejected
-  const statusDist = [];
-  for (let i = 0; i < TOTAL; i++) {
-    if (i < 120)       statusDist.push("approved");
-    else if (i < 225)  statusDist.push("pending_review");
-    else               statusDist.push("rejected");
-  }
 
-  // Shuffle status distribution
-  statusDist.sort(() => Math.random() - 0.5);
+  // We are creating all bidders as 'pending_review' without scores or checks
+  // so the officer can run verification manually.
 
   let created = 0;
 
@@ -258,14 +268,12 @@ async function seedBidders() {
     const pan = generatePAN(i);
     const gstin = generateGSTIN(i, state);
     const udyam = generateUdyam(i);
-    const tenderId = generateTenderId(i);
-    const tenderName = TENDER_NAMES[i % TENDER_NAMES.length];
-    const status = statusDist[i];
-
-    // Quality determines check scores
-    const quality = status === "approved" ? 0.80 + Math.random() * 0.2
-                  : status === "pending_review" ? 0.45 + Math.random() * 0.35
-                  : 0.05 + Math.random() * 0.35;
+    
+    // Assign bidder to one of the 25 tenders
+    const tenderIndex = i % TENDER_NAMES.length;
+    const tenderId = tenders[tenderIndex].tenderId;
+    const tenderName = tenders[tenderIndex].name;
+    const status = "pending_review";
 
     try {
       const bidder = await prisma.bidder.create({
@@ -276,49 +284,20 @@ async function seedBidders() {
           udyam,
           tenderId,
           tenderName,
-          status: "pending_review", // start as pending, update after scoring
+          status: "pending_review",
           createdById: officer.id,
         },
       });
 
-      const checks = generateChecks(bidder.id, quality);
-      await prisma.check.createMany({ data: checks });
-
-      const { score, risk } = computeScore(checks);
-      const recommendation = buildRecommendation(bidder, checks, score, risk);
-
-      // Override status: approved/rejected get a real decision, pending stays
-      let finalStatus = status;
-      if (status === "approved" && score < 50) finalStatus = "pending_review";
-      if (status === "rejected" && score > 80) finalStatus = "pending_review";
-
-      await prisma.bidder.update({
-        where: { id: bidder.id },
-        data:  { score, risk, recommendation, status: finalStatus },
-      });
-
-      // Audit log
+      // Audit log (Initial Registration Only)
       await prisma.auditLog.create({
         data: {
           bidderId:  bidder.id,
           officerId: officer.id,
           actor:     "System",
-          action:    `Mock verification — ${checks.length} checks, score ${score}/100 (${risk} risk). Status: ${finalStatus}.`,
+          action:    `Mock bidder registered via automated seeder. Awaiting verification.`,
         },
       });
-
-      if (finalStatus !== "pending_review") {
-        await prisma.auditLog.create({
-          data: {
-            bidderId:  bidder.id,
-            officerId: officer.id,
-            actor:     officer.name,
-            action:    finalStatus === "approved"
-              ? "Officer decision: APPROVED. Bid forwarded to procurement committee."
-              : "Officer decision: REJECTED. Bid rejected based on compliance review.",
-          },
-        });
-      }
 
       created++;
       if (created % 50 === 0) console.log(`[Seed] ${created}/${TOTAL} bidders created...`);
