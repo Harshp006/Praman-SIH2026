@@ -6,21 +6,18 @@
 
 const { z } = require("zod");
 
-// PATCH /api/bidders/:id/decision
+// POST /api/bidders/:id/decision — spec only allows approve or reject
 const DecisionSchema = z.object({
-  action: z.enum(["approve", "reject", "flag"], {
-    errorMap: () => ({ message: "action must be one of: approve, reject, flag" }),
+  action: z.enum(["approve", "reject"], {
+    errorMap: () => ({ message: "action must be 'approve' or 'reject'" }),
   }),
-  note: z.string().max(1000).optional(),
 });
 
 // Query params for GET /api/bidders
 const BidderListQuerySchema = z.object({
-  status:   z.enum(["approved", "rejected", "under_review"]).optional(),
-  risk:     z.enum(["low", "medium", "high"]).optional(),
-  q:        z.string().max(100).optional(),
-  page:     z.coerce.number().int().min(1).default(1),
-  pageSize: z.coerce.number().int().min(1).max(100).default(20),
+  status: z.enum(["approved", "rejected", "pending_review"]).optional(),
+  risk:   z.enum(["low", "medium", "high"]).optional(),
+  q:      z.string().max(100).optional(),
 });
 
 module.exports = { DecisionSchema, BidderListQuerySchema };

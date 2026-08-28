@@ -14,8 +14,11 @@ module.exports = {
   JWT_SECRET:      process.env.JWT_SECRET      || "praman_jwt_dev_secret_CHANGE_IN_PROD",
   JWT_EXPIRES_IN:  process.env.JWT_EXPIRES_IN  || "8h",
 
-  // Ollama
+  // Ollama — spec requires 8 s timeout; fallback fires automatically on expiry
   OLLAMA_BASE_URL: process.env.OLLAMA_BASE_URL || "http://ollama:11434",
-  OLLAMA_MODEL:    process.env.OLLAMA_MODEL    || "llama3.2",
-  OLLAMA_TIMEOUT:  45_000, // ms — first inference can be slow
+  OLLAMA_MODEL:    process.env.OLLAMA_MODEL    || "llama3.2:3b",
+  OLLAMA_TIMEOUT:  8_000, // ms — per spec; fallback recommendation used on timeout
+
+  // Uploads directory (absolute inside container; relative on host dev)
+  UPLOADS_DIR: process.env.UPLOADS_DIR || "/uploads",
 };

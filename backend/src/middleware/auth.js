@@ -9,8 +9,10 @@
 
 const jwt    = require("jsonwebtoken");
 const config = require("../config");
+const { PrismaClient } = require("@prisma/client");
+const prisma = new PrismaClient();
 
-module.exports = function requireAuth(req, res, next) {
+module.exports = async function requireAuth(req, res, next) {
   const header = req.headers.authorization;
 
   if (!header || !header.startsWith("Bearer ")) {
@@ -23,7 +25,18 @@ module.exports = function requireAuth(req, res, next) {
   const token = header.slice(7);
 
   try {
-    req.officer = jwt.verify(token, config.JWT_SECRET);
+    const decoded = jwt.verify(token, config.JWT_SECRET);
+    
+    // Verify officer actually still exists in DB
+    const officer = await prisma.officer.findUnique({ where: { id: decoded.id } });
+    if (!officer) {
+      return res.status(401).json({
+        error: "Invalid token",
+        detail: "User account no longer exists in the system.",
+      });
+    }
+    
+    req.officer = decoded;
     next();
   } catch (err) {
     const expired = err.name === "TokenExpiredError";

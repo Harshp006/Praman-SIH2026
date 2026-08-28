@@ -17,8 +17,9 @@ model Officer {
   name         String
   createdAt    DateTime   @default(now())
 
-  // Back-relation: actions taken by this officer
+  // Back-relations
   auditLogs    AuditLog[]
+  bidders      Bidder[]   // bidders created by this officer
 }
 
 model Bidder {
@@ -29,24 +30,27 @@ model Bidder {
   udyam          String
   tenderId       String
   tenderName     String
-  score          Int       @default(0)
-  risk           String    @default("pending")
-  status         String    @default("under_review")
-  hardGated      Boolean   @default(false)
+  score          Int?      // null until verification pipeline runs
+  risk           String?   // "low" | "medium" | "high" — null until verified
+  status         String    @default("pending_review") // pending_review | approved | rejected
   recommendation String?
+  createdById    String    // FK → Officer who submitted this bidder
   createdAt      DateTime  @default(now())
   updatedAt      DateTime  @updatedAt
 
+  createdBy Officer    @relation(fields: [createdById], references: [id])
   documents Document[]
   checks    Check[]
   auditLogs AuditLog[]
 }
 
 model Document {
-  id       String @id @default(cuid())
-  bidderId String
-  type     String // PAN / GST / UDYAM
-  fileName String
+  id         String   @id @default(cuid())
+  bidderId   String
+  type       String   // PAN | GST | UDYAM
+  fileName   String
+  filePath   String   // disk path: /uploads/{bidderId}/{filename}
+  uploadedAt DateTime @default(now())
 
   bidder Bidder @relation(fields: [bidderId], references: [id])
 }
@@ -55,8 +59,8 @@ model Check {
   id        String   @id @default(cuid())
   bidderId  String
   label     String
-  category  String   // "statutory" or "tender_specific"
-  state     String   // pass / warn / missing / fail / na
+  category  String   // "statutory" | "tender_specific"
+  state     String   // pass | warn | missing | fail | na
   live      Boolean
   note      String
   weight    Int
@@ -68,10 +72,8 @@ model Check {
 model AuditLog {
   id        String   @id @default(cuid())
   bidderId  String
-  // officerId is null for system-generated entries (verification runs).
-  // Layer 2 must populate this from the JWT when an officer takes an action.
-  officerId String?
-  actor     String   // "system" for automated checks; officer name for human actions
+  officerId String?  // null for System-generated entries
+  actor     String   // "System" for automated entries; officer name for human decisions
   action    String
   timestamp DateTime @default(now())
 

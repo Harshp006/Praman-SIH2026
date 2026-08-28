@@ -3,6 +3,9 @@ import { BrowserRouter, Routes, Route, Navigate, Outlet } from 'react-router-dom
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
 import BidderView from './pages/BidderView';
+import AddBidder from './pages/AddBidder';
+import AuditTrail from './pages/AuditTrail';
+import EditBidder from './pages/EditBidder';
 import Navbar from './components/Navbar';
 import api from './api';
 import './index.css';
@@ -11,7 +14,7 @@ import './index.css';
 const AuthContext = createContext(null);
 export const useAuth = () => useContext(AuthContext);
 
-// Protected Layout with Navbar
+// Protected Layout with Navbar and Footer
 const ProtectedLayout = () => {
   const { officer, logout } = useAuth();
   
@@ -22,9 +25,21 @@ const ProtectedLayout = () => {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
       <Navbar officer={officer} onLogout={logout} />
-      <main className="container py-8" style={{ flex: 1, width: '100%' }}>
+      <main className="container pt-6 pb-8" style={{ flex: 1, width: '100%' }}>
         <Outlet />
       </main>
+      
+      {/* Global Footer */}
+      <footer style={{ 
+        backgroundColor: '#E2E8F0', 
+        borderTop: '1px solid var(--border)',
+        padding: '1rem 0'
+      }}>
+        <div className="container flex justify-between items-center text-xs font-bold uppercase text-muted">
+          <span>Praman — Bid Compliance Verification System | v1.0</span>
+          <span>Best viewed in Chrome / Firefox | Internal use only — CPCL Procurement Division</span>
+        </div>
+      </footer>
     </div>
   );
 };
@@ -40,8 +55,6 @@ function App() {
     
     if (token && storedOfficer) {
       setOfficer(JSON.parse(storedOfficer));
-      // Optional: Verify token with backend /api/auth/me here
-      // api.get('/auth/me').then(...).catch(...)
     }
     setLoading(false);
   }, []);
@@ -70,7 +83,10 @@ function App() {
           
           <Route element={<ProtectedLayout />}>
             <Route path="/" element={<Dashboard />} />
+            <Route path="/add-bidder" element={<AddBidder />} />
+            <Route path="/audit-trail" element={<AuditTrail />} />
             <Route path="/bidders/:id" element={<BidderView />} />
+            <Route path="/bidders/:id/edit" element={<EditBidder />} />
           </Route>
           
           <Route path="*" element={<Navigate to="/" replace />} />

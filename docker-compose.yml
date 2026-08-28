@@ -19,21 +19,6 @@ services:
       retries: 5
       start_period: 10s
 
-  ollama:
-    image: ollama/ollama:latest
-    container_name: praman_ollama
-    restart: unless-stopped
-    ports:
-      - "11434:11434"
-    volumes:
-      - ollama_data:/root/.ollama
-    # Pull llama3.2 on first boot (best-effort; API degrades gracefully if not ready)
-    entrypoint: >
-      sh -c "ollama serve &
-             sleep 5 &&
-             ollama pull llama3.2 || true &&
-             wait"
-
   backend:
     build: ./backend
     container_name: praman_backend
@@ -41,22 +26,23 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
-      ollama:
-        condition: service_started
     environment:
       DATABASE_URL: "postgresql://praman:praman_local@praman_postgres:5432/praman?schema=public"
       NODE_ENV: development
       JWT_SECRET: "praman_jwt_secret_change_in_prod"
       JWT_EXPIRES_IN: "8h"
-      OLLAMA_BASE_URL: "http://ollama:11434"
-      OLLAMA_MODEL: "llama3.2"
+      OLLAMA_BASE_URL: "http://host.docker.internal:11434"
+      OLLAMA_MODEL: "llama3.2:3b"
       PORT: "4000"
+      UPLOADS_DIR: "/uploads"
     ports:
       - "8081:4000"  # host 8081 → container 4000
+    volumes:
+      - uploads_data:/uploads  # persist uploaded documents across restarts
     command: >
       sh -c "
         npx prisma db push --skip-generate &&
-        node src/seed-if-empty.js &&
+        node src/seed.js &&
         node src/index.js
       "
 
@@ -88,5 +74,6 @@ services:
 volumes:
   postgres_data:
     name: praman_postgres_data
-  ollama_data:
-    name: praman_ollama_data
+
+  uploads_data:
+    name: praman_uploads_data  # persists uploaded PAN/GST/Udyam documents

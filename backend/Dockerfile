@@ -1,7 +1,10 @@
 FROM node:20-alpine
 
-# Install dependencies needed for Prisma native binary
+# Dependencies for Prisma native binary
 RUN apk add --no-cache openssl
+
+# Create uploads directory — writable by node process
+RUN mkdir -p /uploads/tmp && chmod -R 777 /uploads
 
 WORKDIR /app
 
@@ -18,6 +21,6 @@ COPY src ./src
 
 EXPOSE 4000
 
-# CMD is intentionally omitted — Layer 2 will wire the real start command.
-# Docker Compose's entrypoint override will handle startup.
-CMD ["node", "-e", "console.log('Praman backend container ready — awaiting Layer 2 start command'); require('http').createServer((_,r)=>r.end('ok')).listen(4000)"]
+# Startup command is specified by docker-compose (prisma db push → seed → server)
+CMD ["node", "src/index.js"]
+
