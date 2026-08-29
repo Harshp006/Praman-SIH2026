@@ -37,8 +37,9 @@ TASK
 ----
 Write a deep, comprehensive 8-12 line summarization and explanation of this bidder's compliance profile.
 Analyze the specific failed or warned checks in detail and explain the potential risks or implications of their current status.
+CRITICAL INSTRUCTION: Extract the state code from the Udyam number (e.g., 'DL' in 'UDYAM-DL-...') and the state code from the GSTIN (the first two digits, e.g., '07'). Cross-check if they correspond to the same state. Explicitly flag in your summary if they do not match or seem inconsistent.
 Based on your deep analysis, make it extremely clear whether the officer should ACCEPT, REJECT, or FLAG FOR REVIEW.
-Close with a final suggested action: APPROVE, FLAG FOR REVIEW, or REJECT.
+Close the summary with exactly this line on a new line at the very end: "AI RECOMMENDS - [APPROVE / FLAG FOR REVIEW / REJECT]". Do not add any text after this line.
 Do not include headers. Use plain text only. Be professional and thorough.`;
 }
 

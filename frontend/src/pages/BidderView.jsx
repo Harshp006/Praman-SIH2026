@@ -425,6 +425,11 @@ const BidderView = () => {
 
               {isVerified && !hasRec && (
                 <div className="text-center text-muted font-bold uppercase text-xs p-4">
+                  Recommendation not available.
+                </div>
+              )}
+
+              {isVerified && hasRec && (
                 <div className="callout font-medium text-sm mb-4"
                   style={{ whiteSpace: 'pre-line', borderLeftColor: 'var(--gold)', backgroundColor: '#FDFCF6', lineHeight: 1.6 }}>
                   {bidder.recommendation}

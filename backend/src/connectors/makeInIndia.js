@@ -4,7 +4,7 @@
 
 "use strict";
 
-const { portalDelay } = require("./_utils");
+const { portalDelay, hashString } = require("./_utils");
 
 // No MII cert uploaded for Kaveri Systems
 const MISSING_MII_PAN = "AAHCK9012H";
@@ -36,6 +36,22 @@ module.exports = async function checkMakeInIndia(bidder) {
     return {
       state: "warn",
       note:  "Local content declaration submitted but notarisation by a gazetted officer is absent. Re-submission required with notarised copy.",
+    };
+  }
+
+  
+  const hashVal = hashString(pan) % 100;
+  if (hashVal < 5) { // 5% chance of failure
+    return {
+      state: "fail",
+      note: "Make In India verification failed: Local content declared as < 20%, falling below Class II supplier minimum thresholds.",
+    };
+  }
+  
+  if (hashVal >= 5 && hashVal < 20) { // 15% chance of warning
+    return {
+      state: "warn",
+      note: "Make In India: Self-declaration of local content present but supporting CA certificate is missing.",
     };
   }
 

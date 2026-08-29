@@ -53,6 +53,21 @@ function computeScore(checks) {
     score = rawScore;
   }
 
+  // Add deterministic random noise (-3 to +3) based on bidderId to spread out identical scores
+  let noise = 0;
+  if (checks.length > 0 && checks[0].bidderId) {
+    const idStr = checks[0].bidderId;
+    let hash = 0;
+    for (let i = 0; i < idStr.length; i++) {
+      hash = ((hash << 5) - hash) + idStr.charCodeAt(i);
+      hash |= 0;
+    }
+    noise = (Math.abs(hash) % 7) - 3;
+  } else {
+    noise = Math.floor(Math.random() * 7) - 3;
+  }
+  score = Math.max(0, Math.min(100, score + noise));
+
   // Risk tiers per spec: 80-100 low · 50-79 medium · <50 high
   const risk =
     score >= 80 ? "low"    :

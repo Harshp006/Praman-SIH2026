@@ -4,7 +4,7 @@
 
 "use strict";
 
-const { portalDelay } = require("./_utils");
+const { portalDelay, hashString } = require("./_utils");
 
 // Rajputana — EPFO registration not found
 const MISSING_EPFO_PAN = "AABCR3456K";
@@ -45,6 +45,22 @@ module.exports = async function checkEPFO(bidder) {
     return {
       state: "warn",
       note:  "EPFO registration active; UAN seeding incomplete for 2 of 7 employees. Partial non-compliance noted — rectification required.",
+    };
+  }
+
+  
+  const hashVal = hashString(pan) % 100;
+  if (hashVal < 5) { // 5% chance of failure
+    return {
+      state: "fail",
+      note: "EPFO check failed: ECR not filed for the last 6 months indicating business inactivity or default.",
+    };
+  }
+  
+  if (hashVal >= 5 && hashVal < 20) { // 15% chance of warning
+    return {
+      state: "warn",
+      note: "EPFO: Partial compliance. Contributions deposited but late fees pending for previous quarter.",
     };
   }
 

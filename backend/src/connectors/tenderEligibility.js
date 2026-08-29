@@ -5,7 +5,7 @@
 
 "use strict";
 
-const { portalDelay } = require("./_utils");
+const { portalDelay, hashString } = require("./_utils");
 
 // Experience shortfalls mapped by PAN
 const PROFILES = {
@@ -34,6 +34,22 @@ module.exports = async function checkTenderEligibility(bidder) {
 
   if (PROFILES[pan]) {
     return PROFILES[pan];
+  }
+
+  
+  const hashVal = hashString(pan) % 100;
+  if (hashVal < 5) { // 5% chance of failure
+    return {
+      state: "fail",
+      note: "Tender eligibility failed: Financial turnover for the last 3 years does not meet the tender's minimum threshold.",
+    };
+  }
+  
+  if (hashVal >= 5 && hashVal < 20) { // 15% chance of warning
+    return {
+      state: "warn",
+      note: "Tender eligibility: Prior experience criteria marginally met. Review past performance reports.",
+    };
   }
 
   return {

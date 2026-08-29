@@ -4,7 +4,7 @@
 
 "use strict";
 
-const { portalDelay } = require("./_utils");
+const { portalDelay, hashString } = require("./_utils");
 
 // Civil works — not applicable
 const CIVIL_PAN = "AAACP7890L";
@@ -23,7 +23,23 @@ module.exports = async function checkStartupIndia(bidder) {
 
   // Bharat Digital — NSIC registered
   if (pan === "AABCB1234F") {
+    
+  const hashVal = hashString(pan) % 100;
+  if (hashVal < 5) { // 5% chance of failure
     return {
+      state: "fail",
+      note: "Startup India recognition revoked or expired. Entity is not eligible for exemptions.",
+    };
+  }
+  
+  if (hashVal >= 5 && hashVal < 20) { // 15% chance of warning
+    return {
+      state: "warn",
+      note: "Startup India / OEM certificate uploaded is blurry or outdated. Manual verification advised.",
+    };
+  }
+
+  return {
       state: "pass",
       note:  "NSIC registration active (single point registration). Category aligns with IT hardware supply scope under this tender.",
     };

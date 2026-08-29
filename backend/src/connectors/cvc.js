@@ -5,7 +5,7 @@
 
 "use strict";
 
-const { portalDelay } = require("./_utils");
+const { portalDelay, hashString } = require("./_utils");
 
 // Patel Constructions — confirmed debarred
 const DEBARRED_PAN  = "AAACP7890L";
@@ -21,6 +21,22 @@ module.exports = async function checkCVC(bidder) {
     return {
       state: "fail",
       note:  "CVC debarment order confirmed active — GeM blacklist registry match found. Order dated 14 Jan 2025 issued by Vigilance Commission. Entity ineligible for any Central Government procurement for 3 years. HARD GATE.",
+    };
+  }
+
+  
+  const hashVal = hashString(pan) % 100;
+  if (hashVal < 5) { // 5% chance of failure
+    return {
+      state: "fail",
+      note: "CVC debarment order active — GeM blacklist registry match found. Entity ineligible for Central Government procurement. HARD GATE.",
+    };
+  }
+  
+  if (hashVal >= 5 && hashVal < 20) { // 15% chance of warning
+    return {
+      state: "warn",
+      note: "CVC check: Pending vigilance inquiry flagged, though no formal debarment issued yet.",
     };
   }
 

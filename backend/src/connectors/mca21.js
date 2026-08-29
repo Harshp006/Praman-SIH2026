@@ -4,7 +4,7 @@
 
 "use strict";
 
-const { portalDelay } = require("./_utils");
+const { portalDelay, hashString } = require("./_utils");
 
 // Patel — STRIKE-OFF
 const STRIKE_OFF_PAN = "AAACP7890L";
@@ -27,6 +27,22 @@ module.exports = async function checkMCA21(bidder) {
     return {
       state: "warn",
       note:  "MCA21: DIN of one director flagged for non-filing of DIR-3 KYC for FY 2024-25. Director's DIN is deactivated; restoration application required.",
+    };
+  }
+
+  
+  const hashVal = hashString(pan) % 100;
+  if (hashVal < 5) { // 5% chance of failure
+    return {
+      state: "fail",
+      note: "MCA21: Company marked STRIKE-OFF by Registrar of Companies (RoC). Entity has no legal standing to enter into contracts.",
+    };
+  }
+  
+  if (hashVal >= 5 && hashVal < 20) { // 15% chance of warning
+    return {
+      state: "warn",
+      note: "MCA21: DIN of one director flagged for non-filing of DIR-3 KYC. Director's DIN is deactivated; restoration application required.",
     };
   }
 

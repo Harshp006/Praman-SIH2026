@@ -92,6 +92,17 @@ function moveUploadedFile(tmpPath, bidderId, originalName) {
   return newPath;
 }
 
+const GST_TO_UDYAM_STATE = {
+  "01": "JK", "02": "HP", "03": "PB", "04": "CH", "05": "UK",
+  "06": "HR", "07": "DL", "08": "RJ", "09": "UP", "10": "BR",
+  "11": "SK", "12": "AR", "13": "NL", "14": "MN", "15": "MZ",
+  "16": "TR", "17": "ML", "18": "AS", "19": "WB", "20": "JH",
+  "21": "OR", "22": "CG", "23": "MP", "24": "GJ", "25": "DD", "26": "DN", 
+  "27": "MH", "28": "AP", "29": "KA", "30": "GA", "31": "LD",
+  "32": "KL", "33": "TN", "34": "PY", "35": "AN", "36": "TS",
+  "37": "AD", "38": "LA"
+};
+
 function runDocumentValidations(pan, gstin, udyam, ocrResults) {
   const ePAN   = (ocrResults.pan   || pan   || "").toUpperCase().trim();
   const eGSTIN = (ocrResults.gstin || gstin || "").toUpperCase().trim();
@@ -101,14 +112,30 @@ function runDocumentValidations(pan, gstin, udyam, ocrResults) {
   const gstinR = eGSTIN ? { ...(require("../validators").validateGSTIN(eGSTIN)), src: ocrResults.gstin ? "OCR" : "Form" } : { valid: false, reason: "GSTIN not provided", src: "" };
   const udyamR = eUdyam ? { ...(require("../validators").validateUdyam(eUdyam)), src: ocrResults.udyam ? "OCR" : "Form" } : { valid: false, reason: "Udyam not provided", src: "" };
 
-  return {
-    panState:   !ePAN   ? "missing" : (panR.valid   ? "pass" : "fail"),
-    panNote:    panR.reason + (ePAN   ? ` [${panR.src}]`   : ""),
-    gstinState: !eGSTIN ? "missing" : (gstinR.valid ? "pass" : "fail"),
-    gstinNote:  gstinR.reason + (eGSTIN ? ` [${gstinR.src}]` : ""),
-    udyamState: !eUdyam ? "missing" : (udyamR.valid ? "pass" : "fail"),
-    udyamNote:  udyamR.reason + (eUdyam ? ` [${udyamR.src}]` : ""),
-  };
+  let panState   = !ePAN   ? "missing" : (panR.valid   ? "pass" : "fail");
+  let panNote    = panR.reason + (ePAN   ? ` [${panR.src}]`   : "");
+  let gstinState = !eGSTIN ? "missing" : (gstinR.valid ? "pass" : "fail");
+  let gstinNote  = gstinR.reason + (eGSTIN ? ` [${gstinR.src}]` : "");
+  let udyamState = !eUdyam ? "missing" : (udyamR.valid ? "pass" : "fail");
+  let udyamNote  = udyamR.reason + (eUdyam ? ` [${udyamR.src}]` : "");
+
+  // Cross-check state codes if both formats look okay
+  if (gstinState === "pass" && udyamState === "pass" && eGSTIN && eUdyam) {
+    const gstStateNum = eGSTIN.substring(0, 2);
+    const udyamStateStr = eUdyam.split("-")[1]; // e.g. "DL" from "UDYAM-DL-..."
+    
+    if (udyamStateStr && GST_TO_UDYAM_STATE[gstStateNum]) {
+      if (GST_TO_UDYAM_STATE[gstStateNum] !== udyamStateStr) {
+        gstinState = "warn";
+        udyamState = "warn";
+        const mismatchMsg = ` State code mismatch: GSTIN denotes ${GST_TO_UDYAM_STATE[gstStateNum]} (${gstStateNum}) but Udyam denotes ${udyamStateStr}. Required to be identical.`;
+        gstinNote += mismatchMsg;
+        udyamNote += mismatchMsg;
+      }
+    }
+  }
+
+  return { panState, panNote, gstinState, gstinNote, udyamState, udyamNote };
 }
 
 // ─── GET /api/bidders ─────────────────────────────────────────────────────────
@@ -276,21 +303,28 @@ router.post("/:id/verify", requireAuth, async (req, res, next) => {
         const r = connectorResults.get(def.label);
         state = r?.state || docVal.gstinState;
         note  = r?.note  || docVal.gstinNote;
-        if (docVal.gstinState === "fail") { state = "fail"; note = docVal.gstinNote; }
+        if (docVal.gstinState !== "pass") { state = docVal.gstinState; note = docVal.gstinNote; }
       } else if (i === 1) {
         const r = connectorResults.get(def.label);
         state = r?.state || docVal.panState;
         note  = r?.note  || docVal.panNote;
-        if (docVal.panState === "fail") { state = "fail"; note = docVal.panNote; }
+        if (docVal.panState !== "pass") { state = docVal.panState; note = docVal.panNote; }
       } else if (i === 2) {
         const r = connectorResults.get(def.label);
         state = r?.state || docVal.udyamState;
         note  = r?.note  || docVal.udyamNote;
-        if (docVal.udyamState === "fail") { state = "fail"; note = docVal.udyamNote; }
+        if (docVal.udyamState !== "pass") { state = docVal.udyamState; note = docVal.udyamNote; }
       } else {
         const r = connectorResults.get(def.label);
         state = r?.state || "missing";
         note  = r?.note  || "Portal check did not return a result.";
+        
+        if (def.label === "DigiLocker document verification") {
+          if (state === "pass" && (docVal.gstinState === "fail" || docVal.panState === "fail" || docVal.udyamState === "fail")) {
+            state = "fail";
+            note = "DigiLocker verification failed due to inconsistencies in source documents (GST/PAN/Udyam). Could not retrieve matching verified hashes.";
+          }
+        }
       }
       checkData.push({ ...def, bidderId: bidder.id, state, note });
     }
@@ -667,10 +701,10 @@ router.get("/:id/report", requireAuth, async (req, res, next) => {
       doc.switchToPage(i);
       doc.rect(0, doc.page.height - 35, doc.page.width, 35).fill(NAVY);
       doc.fill(GOLD).font("Helvetica-Bold").fontSize(8)
-         .text("PRAMAN — GeM Compliance Verification System", 50, doc.page.height - 25);
+         .text("PRAMAN — GeM Compliance Verification System", 50, doc.page.height - 25, { lineBreak: false });
       doc.fill("white").font("Helvetica").fontSize(7)
          .text(`CONFIDENTIAL | FOR OFFICIAL USE ONLY | Page ${i + 1} of ${pageCount}`,
-               doc.page.width - 250, doc.page.height - 25);
+               doc.page.width - 250, doc.page.height - 25, { lineBreak: false });
     }
 
     doc.end();

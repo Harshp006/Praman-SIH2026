@@ -43,6 +43,7 @@ services:
       sh -c "
         npx prisma db push --skip-generate &&
         node src/seed.js &&
+        node src/scripts/seed-bidders.js &&
         node src/index.js
       "
 
