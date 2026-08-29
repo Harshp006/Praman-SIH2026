@@ -105,33 +105,18 @@ const BidderView = () => {
 
   const flash = (msg) => { setSuccessMsg(msg); setTimeout(() => setSuccessMsg(''), 4000); };
 
-  // Run Verification
+  // Run Verification (now includes AI recommendation generation automatically)
   const handleVerify = async () => {
     setActionError('');
     setVerifying(true);
     try {
       const r = await api.post(`/bidders/${id}/verify`);
       setBidder(r.data);
-      flash('Verification completed successfully.');
+      flash('Verification and AI recommendation completed successfully.');
     } catch (err) {
       setActionError(err.response?.data?.error || 'Verification failed.');
     } finally {
       setVerifying(false);
-    }
-  };
-
-  // Generate Recommendation
-  const handleRecommend = async () => {
-    setActionError('');
-    setRecommending(true);
-    try {
-      const r = await api.post(`/bidders/${id}/recommend`);
-      setBidder(prev => ({ ...prev, recommendation: r.data.recommendation }));
-      flash('AI recommendation generated successfully.');
-    } catch (err) {
-      setActionError(err.response?.data?.error || 'Recommendation generation failed.');
-    } finally {
-      setRecommending(false);
     }
   };
 
@@ -302,9 +287,9 @@ const BidderView = () => {
 
             {verifying && (
               <div className="p-6 text-center" style={{ border: '1px solid var(--border)', borderTop: 'none', backgroundColor: 'var(--surface)' }}>
-                <div className="spinner" style={{ width: 40, height: 40, borderWidth: 4, margin: '0 auto 1rem' }}></div>
-                <div className="font-bold uppercase text-sm" style={{ color: 'var(--navy-dark)' }}>Running Verification Pipeline…</div>
-                <div className="text-xs text-muted mt-1">OCR extraction → Portal connectors → Score calculation. Please wait.</div>
+                <div className="spinner" style={{ width: 40, height: 40, borderWidth: 4, margin: '0 auto 1rem', borderColor: '#8B5CF6', borderTopColor: 'transparent' }}></div>
+                <div className="font-bold uppercase text-sm" style={{ color: '#8B5CF6' }}>Running Verification Pipeline & AI Analysis…</div>
+                <div className="text-xs text-muted mt-1">OCR extraction → Portal connectors → Score calculation → Ollama Recommendation. Please wait.</div>
               </div>
             )}
 
@@ -434,40 +419,19 @@ const BidderView = () => {
             <div className="card-body">
               {!isVerified && (
                 <div className="callout text-xs font-bold text-muted" style={{ borderLeftColor: 'var(--status-pending)' }}>
-                  Run verification first, then generate the AI recommendation.
+                  Run verification to automatically generate the AI recommendation.
                 </div>
               )}
 
-              {isVerified && !hasRec && !recommending && (
+              {isVerified && !hasRec && (
                 <div className="text-center text-muted font-bold uppercase text-xs p-4">
-                  No recommendation yet. Click button below.
-                </div>
-              )}
-
-              {recommending && (
-                <div className="text-center p-6">
-                  <div className="spinner" style={{ width: 36, height: 36, borderWidth: 3, margin: '0 auto 0.75rem' }}></div>
-                  <div className="font-bold uppercase text-sm" style={{ color: '#8B5CF6' }}>Generating via Ollama…</div>
-                  <div className="text-xs text-muted mt-1">LLM is analysing checks & producing compliance summary.</div>
-                </div>
-              )}
-
-              {hasRec && !recommending && (
                 <div className="callout font-medium text-sm mb-4"
                   style={{ whiteSpace: 'pre-line', borderLeftColor: 'var(--gold)', backgroundColor: '#FDFCF6', lineHeight: 1.6 }}>
                   {bidder.recommendation}
                 </div>
               )}
 
-              {isVerified && (
-                <button onClick={handleRecommend} disabled={recommending || !isVerified}
-                  className="btn btn-outline w-full" style={{ gap: '0.5rem' }}>
-                  {recommending
-                    ? <><span className="spinner" style={{ width: 14, height: 14, borderWidth: 2 }}></span> GENERATING (OLLAMA)…</>
-                    : <><Brain size={14} /> {hasRec ? 'REGENERATE RECOMMENDATION' : 'GENERATE RECOMMENDATION'}</>
-                  }
-                </button>
-              )}
+              {/* Button removed as recommendation is now generated automatically */}
             </div>
           </div>
 

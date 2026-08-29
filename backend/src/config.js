@@ -17,7 +17,7 @@ module.exports = {
   // Ollama — spec requires 8 s timeout; fallback fires automatically on expiry
   OLLAMA_BASE_URL: process.env.OLLAMA_BASE_URL || "http://ollama:11434",
   OLLAMA_MODEL:    process.env.OLLAMA_MODEL    || "llama3.2:3b",
-  OLLAMA_TIMEOUT:  8_000, // ms — per spec; fallback recommendation used on timeout
+  OLLAMA_TIMEOUT:  60_000, // Increased to 60s for hackathon demo to ensure LLM has enough time to respond
 
   // Uploads directory (absolute inside container; relative on host dev)
   UPLOADS_DIR: process.env.UPLOADS_DIR || "/uploads",

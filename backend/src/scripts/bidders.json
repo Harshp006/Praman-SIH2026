@@ -1,0 +1,902 @@
+[
+  {
+    "name": "Alpha Infotech (Sample 1)",
+    "pan": "HFTCV7550C",
+    "gstin": "07HFTCV7550C1ZD",
+    "udyam": "UDYAM-DL-00-2657744"
+  },
+  {
+    "name": "Alpha Global Trading (Sample 2)",
+    "pan": "USICE2713L",
+    "gstin": "19USICE2713L1ZM",
+    "udyam": "UDYAM-WB-00-6875935"
+  },
+  {
+    "name": "Trident Enterprises LLC (Sample 3)",
+    "pan": "SBFCJ9883O",
+    "gstin": "24SBFCJ9883O1ZN",
+    "udyam": "UDYAM-GJ-00-1367606"
+  },
+  {
+    "name": "Zenith Manufacturing Corp (Sample 4)",
+    "pan": "JZQCR2370B",
+    "gstin": "29JZQCR2370B1ZK",
+    "udyam": "UDYAM-KA-00-4095724"
+  },
+  {
+    "name": "Omega Logistics India Pvt Ltd (Sample 5)",
+    "pan": "DTOCX5832E",
+    "gstin": "32DTOCX5832E1ZW",
+    "udyam": "UDYAM-KL-00-4781165"
+  },
+  {
+    "name": "Sterling Industries (Sample 6)",
+    "pan": "ZNZCA6187Y",
+    "gstin": "09ZNZCA6187Y1ZL",
+    "udyam": "UDYAM-UP-00-1449825"
+  },
+  {
+    "name": "Beacon Tech Solutions Private Limited (Sample 7)",
+    "pan": "WHQCT1319Q",
+    "gstin": "33WHQCT1319Q1Z0",
+    "udyam": "UDYAM-TN-00-5413982"
+  },
+  {
+    "name": "Trident Tech Solutions Private Limited (Sample 8)",
+    "pan": "CMBCY5169F",
+    "gstin": "29CMBCY5169F1ZG",
+    "udyam": "UDYAM-KA-00-5699767"
+  },
+  {
+    "name": "Summit Manufacturing Corp (Sample 9)",
+    "pan": "XLGCC3522C",
+    "gstin": "09XLGCC3522C1Z3",
+    "udyam": "UDYAM-UP-00-2980262"
+  },
+  {
+    "name": "Trident Industries (Sample 10)",
+    "pan": "MUUCG0634X",
+    "gstin": "33MUUCG0634X1Z3",
+    "udyam": "UDYAM-TN-00-6904382"
+  },
+  {
+    "name": "Pinnacle Manufacturing Corp (Sample 11)",
+    "pan": "DEMCC4850R",
+    "gstin": "29DEMCC4850R1Z0",
+    "udyam": "UDYAM-KA-00-9981424"
+  },
+  {
+    "name": "Zenith Manufacturing Corp (Sample 12)",
+    "pan": "AKYCZ4499R",
+    "gstin": "27AKYCZ4499R1ZV",
+    "udyam": "UDYAM-MH-00-1295570"
+  },
+  {
+    "name": "Beacon Global Trading (Sample 13)",
+    "pan": "NBNCF0084S",
+    "gstin": "32NBNCF0084S1ZF",
+    "udyam": "UDYAM-KL-00-5006532"
+  },
+  {
+    "name": "Nexus Logistics India Pvt Ltd (Sample 14)",
+    "pan": "KRHCK9906S",
+    "gstin": "24KRHCK9906S1Z6",
+    "udyam": "UDYAM-GJ-00-0229883"
+  },
+  {
+    "name": "Acme Global Trading (Sample 15)",
+    "pan": "OHZCZ6082V",
+    "gstin": "33OHZCZ6082V1Z6",
+    "udyam": "UDYAM-TN-00-9111526"
+  },
+  {
+    "name": "Quantum Infotech (Sample 16)",
+    "pan": "QGMCB0420Y",
+    "gstin": "24QGMCB0420Y1Z8",
+    "udyam": "UDYAM-GJ-00-6275400"
+  },
+  {
+    "name": "Pinnacle Tech Solutions Private Limited (Sample 17)",
+    "pan": "VPDCE0399B",
+    "gstin": "33VPDCE0399B1ZM",
+    "udyam": "UDYAM-TN-00-2217846"
+  },
+  {
+    "name": "Nexus Global Trading (Sample 18)",
+    "pan": "EUECN0739Z",
+    "gstin": "33EUECN0739Z1ZF",
+    "udyam": "UDYAM-TN-00-2718828"
+  },
+  {
+    "name": "Summit Logistics India Pvt Ltd (Sample 19)",
+    "pan": "VWFCV1389I",
+    "gstin": "32VWFCV1389I1ZM",
+    "udyam": "UDYAM-KL-00-6395919"
+  },
+  {
+    "name": "Trident Logistics India Pvt Ltd (Sample 20)",
+    "pan": "APICZ3653S",
+    "gstin": "33APICZ3653S1ZC",
+    "udyam": "UDYAM-TN-00-2709577"
+  },
+  {
+    "name": "Summit Manufacturing Corp (Sample 21)",
+    "pan": "BRICK6195V",
+    "gstin": "29BRICK6195V1ZQ",
+    "udyam": "UDYAM-KA-00-3651637"
+  },
+  {
+    "name": "Orient Industries (Sample 22)",
+    "pan": "HOACJ2763O",
+    "gstin": "33HOACJ2763O1ZS",
+    "udyam": "UDYAM-TN-00-6579762"
+  },
+  {
+    "name": "Apex Global Trading (Sample 23)",
+    "pan": "YGICZ1024Y",
+    "gstin": "24YGICZ1024Y1Z4",
+    "udyam": "UDYAM-GJ-00-4857331"
+  },
+  {
+    "name": "Delta Global Trading (Sample 24)",
+    "pan": "LEYCQ4591E",
+    "gstin": "27LEYCQ4591E1ZT",
+    "udyam": "UDYAM-MH-00-6959867"
+  },
+  {
+    "name": "Pinnacle Manufacturing Corp (Sample 25)",
+    "pan": "XTMCI7827P",
+    "gstin": "09XTMCI7827P1ZF",
+    "udyam": "UDYAM-UP-00-2022351"
+  },
+  {
+    "name": "Sterling Infotech (Sample 26)",
+    "pan": "DFKCK5424Y",
+    "gstin": "29DFKCK5424Y1Z1",
+    "udyam": "UDYAM-KA-00-8730378"
+  },
+  {
+    "name": "Pinnacle Infotech (Sample 27)",
+    "pan": "TUXCP2403V",
+    "gstin": "09TUXCP2403V1ZP",
+    "udyam": "UDYAM-UP-00-7899595"
+  },
+  {
+    "name": "Apex Infotech (Sample 28)",
+    "pan": "LWECI3237M",
+    "gstin": "27LWECI3237M1ZH",
+    "udyam": "UDYAM-MH-00-7820059"
+  },
+  {
+    "name": "Nexus Infotech (Sample 29)",
+    "pan": "BYBCA9101E",
+    "gstin": "24BYBCA9101E1ZU",
+    "udyam": "UDYAM-GJ-00-6526716"
+  },
+  {
+    "name": "Zenith Logistics India Pvt Ltd (Sample 30)",
+    "pan": "CAICV9391S",
+    "gstin": "07CAICV9391S1ZF",
+    "udyam": "UDYAM-DL-00-1786197"
+  },
+  {
+    "name": "Pinnacle Manufacturing Corp (Sample 31)",
+    "pan": "RBQCA8819U",
+    "gstin": "24RBQCA8819U1ZT",
+    "udyam": "UDYAM-GJ-00-7479285"
+  },
+  {
+    "name": "Acme Manufacturing Corp (Sample 32)",
+    "pan": "VPICH8082O",
+    "gstin": "32VPICH8082O1ZO",
+    "udyam": "UDYAM-KL-00-3434322"
+  },
+  {
+    "name": "Pinnacle Tech Solutions Private Limited (Sample 33)",
+    "pan": "NEGCN4766P",
+    "gstin": "19NEGCN4766P1ZS",
+    "udyam": "UDYAM-WB-00-7026354"
+  },
+  {
+    "name": "Infiniti Infotech (Sample 34)",
+    "pan": "OJLCJ2111R",
+    "gstin": "24OJLCJ2111R1ZB",
+    "udyam": "UDYAM-GJ-00-1725759"
+  },
+  {
+    "name": "Vanguard Enterprises LLC (Sample 35)",
+    "pan": "JHSCE2956E",
+    "gstin": "29JHSCE2956E1ZV",
+    "udyam": "UDYAM-KA-00-1024392"
+  },
+  {
+    "name": "Delta Global Trading (Sample 36)",
+    "pan": "BMPCV0153H",
+    "gstin": "32BMPCV0153H1Z7",
+    "udyam": "UDYAM-KL-00-5456739"
+  },
+  {
+    "name": "Trident Manufacturing Corp (Sample 37)",
+    "pan": "HQPCX0762C",
+    "gstin": "19HQPCX0762C1ZA",
+    "udyam": "UDYAM-WB-00-2514640"
+  },
+  {
+    "name": "Vanguard Infotech (Sample 38)",
+    "pan": "WBGCI7669N",
+    "gstin": "19WBGCI7669N1Z7",
+    "udyam": "UDYAM-WB-00-5698013"
+  },
+  {
+    "name": "Acme Tech Solutions Private Limited (Sample 39)",
+    "pan": "MHKCI5400N",
+    "gstin": "19MHKCI5400N1ZK",
+    "udyam": "UDYAM-WB-00-6026850"
+  },
+  {
+    "name": "Trident Tech Solutions Private Limited (Sample 40)",
+    "pan": "TENCO9156P",
+    "gstin": "19TENCO9156P1Z5",
+    "udyam": "UDYAM-WB-00-4431144"
+  },
+  {
+    "name": "Pinnacle Tech Solutions Private Limited (Sample 41)",
+    "pan": "LIICY4596R",
+    "gstin": "09LIICY4596R1ZT",
+    "udyam": "UDYAM-UP-00-4137672"
+  },
+  {
+    "name": "Vanguard Manufacturing Corp (Sample 42)",
+    "pan": "WMACU6215R",
+    "gstin": "33WMACU6215R1ZQ",
+    "udyam": "UDYAM-TN-00-0994184"
+  },
+  {
+    "name": "Beacon Infotech (Sample 43)",
+    "pan": "HVZCH4115X",
+    "gstin": "19HVZCH4115X1Z8",
+    "udyam": "UDYAM-WB-00-8274958"
+  },
+  {
+    "name": "Vanguard Global Trading (Sample 44)",
+    "pan": "PZMCE4437M",
+    "gstin": "19PZMCE4437M1ZT",
+    "udyam": "UDYAM-WB-00-9892384"
+  },
+  {
+    "name": "Nova Infotech (Sample 45)",
+    "pan": "XJZCZ8940Q",
+    "gstin": "24XJZCZ8940Q1ZL",
+    "udyam": "UDYAM-GJ-00-8845474"
+  },
+  {
+    "name": "Apex Manufacturing Corp (Sample 46)",
+    "pan": "UGQCM6888M",
+    "gstin": "33UGQCM6888M1ZK",
+    "udyam": "UDYAM-TN-00-6845626"
+  },
+  {
+    "name": "Nexus Infotech (Sample 47)",
+    "pan": "CZTCW8469B",
+    "gstin": "19CZTCW8469B1ZK",
+    "udyam": "UDYAM-WB-00-7231557"
+  },
+  {
+    "name": "Zenith Tech Solutions Private Limited (Sample 48)",
+    "pan": "PJRCP9142I",
+    "gstin": "33PJRCP9142I1Z0",
+    "udyam": "UDYAM-TN-00-8425099"
+  },
+  {
+    "name": "Infiniti Infotech (Sample 49)",
+    "pan": "GVFCM8133J",
+    "gstin": "19GVFCM8133J1ZI",
+    "udyam": "UDYAM-WB-00-0830879"
+  },
+  {
+    "name": "Vanguard Global Trading (Sample 50)",
+    "pan": "UPJCU1277V",
+    "gstin": "32UPJCU1277V1Z8",
+    "udyam": "UDYAM-KL-00-6963457"
+  },
+  {
+    "name": "Vanguard Logistics India Pvt Ltd (Sample 51)",
+    "pan": "TEDCR8352F",
+    "gstin": "07TEDCR8352F1ZG",
+    "udyam": "UDYAM-DL-00-9992884"
+  },
+  {
+    "name": "Omega Global Trading (Sample 52)",
+    "pan": "ZWSCM9837A",
+    "gstin": "07ZWSCM9837A1ZG",
+    "udyam": "UDYAM-DL-00-5466589"
+  },
+  {
+    "name": "Nexus Manufacturing Corp (Sample 53)",
+    "pan": "AWOCT2089J",
+    "gstin": "07AWOCT2089J1ZQ",
+    "udyam": "UDYAM-DL-00-1009125"
+  },
+  {
+    "name": "Acme Logistics India Pvt Ltd (Sample 54)",
+    "pan": "RTYCN5786P",
+    "gstin": "09RTYCN5786P1ZQ",
+    "udyam": "UDYAM-UP-00-9262423"
+  },
+  {
+    "name": "Pinnacle Infotech (Sample 55)",
+    "pan": "JKECD9802U",
+    "gstin": "24JKECD9802U1Z1",
+    "udyam": "UDYAM-GJ-00-0397285"
+  },
+  {
+    "name": "Nexus Logistics India Pvt Ltd (Sample 56)",
+    "pan": "UUPCI8112F",
+    "gstin": "29UUPCI8112F1Z7",
+    "udyam": "UDYAM-KA-00-6007231"
+  },
+  {
+    "name": "Omega Infotech (Sample 57)",
+    "pan": "KCBCO7515T",
+    "gstin": "27KCBCO7515T1Z2",
+    "udyam": "UDYAM-MH-00-7963609"
+  },
+  {
+    "name": "Infiniti Infotech (Sample 58)",
+    "pan": "CSLCC3116S",
+    "gstin": "09CSLCC3116S1ZZ",
+    "udyam": "UDYAM-UP-00-7352547"
+  },
+  {
+    "name": "Pinnacle Infotech (Sample 59)",
+    "pan": "WLXCN3440N",
+    "gstin": "07WLXCN3440N1ZK",
+    "udyam": "UDYAM-DL-00-6319080"
+  },
+  {
+    "name": "Summit Global Trading (Sample 60)",
+    "pan": "DBYCR3136Y",
+    "gstin": "07DBYCR3136Y1ZR",
+    "udyam": "UDYAM-DL-00-8796352"
+  },
+  {
+    "name": "Nexus Global Trading (Sample 61)",
+    "pan": "CVJCY2245Y",
+    "gstin": "32CVJCY2245Y1ZZ",
+    "udyam": "UDYAM-KL-00-0982173"
+  },
+  {
+    "name": "Summit Tech Solutions Private Limited (Sample 62)",
+    "pan": "EDRCC1607G",
+    "gstin": "24EDRCC1607G1ZO",
+    "udyam": "UDYAM-GJ-00-4337750"
+  },
+  {
+    "name": "Omega Enterprises LLC (Sample 63)",
+    "pan": "TBCCO6442Y",
+    "gstin": "27TBCCO6442Y1ZW",
+    "udyam": "UDYAM-MH-00-1426460"
+  },
+  {
+    "name": "Orient Tech Solutions Private Limited (Sample 64)",
+    "pan": "AHFCE7214N",
+    "gstin": "09AHFCE7214N1ZB",
+    "udyam": "UDYAM-UP-00-1525633"
+  },
+  {
+    "name": "Infiniti Tech Solutions Private Limited (Sample 65)",
+    "pan": "LCICN5741A",
+    "gstin": "27LCICN5741A1ZK",
+    "udyam": "UDYAM-MH-00-1946341"
+  },
+  {
+    "name": "Trident Manufacturing Corp (Sample 66)",
+    "pan": "NKICK2706Q",
+    "gstin": "09NKICK2706Q1ZW",
+    "udyam": "UDYAM-UP-00-1739611"
+  },
+  {
+    "name": "Quantum Enterprises LLC (Sample 67)",
+    "pan": "PTRCF9645S",
+    "gstin": "19PTRCF9645S1ZS",
+    "udyam": "UDYAM-WB-00-6869393"
+  },
+  {
+    "name": "Apex Manufacturing Corp (Sample 68)",
+    "pan": "LHHCB3040L",
+    "gstin": "32LHHCB3040L1ZI",
+    "udyam": "UDYAM-KL-00-0886545"
+  },
+  {
+    "name": "Acme Global Trading (Sample 69)",
+    "pan": "OEPCQ1018K",
+    "gstin": "27OEPCQ1018K1Z5",
+    "udyam": "UDYAM-MH-00-5124451"
+  },
+  {
+    "name": "Vanguard Manufacturing Corp (Sample 70)",
+    "pan": "KIPCZ6335M",
+    "gstin": "24KIPCZ6335M1ZI",
+    "udyam": "UDYAM-GJ-00-2896106"
+  },
+  {
+    "name": "Vanguard Infotech (Sample 71)",
+    "pan": "SKPCC3378V",
+    "gstin": "24SKPCC3378V1ZX",
+    "udyam": "UDYAM-GJ-00-0650393"
+  },
+  {
+    "name": "Quantum Enterprises LLC (Sample 72)",
+    "pan": "ZEHCZ1788B",
+    "gstin": "32ZEHCZ1788B1ZL",
+    "udyam": "UDYAM-KL-00-8651166"
+  },
+  {
+    "name": "Acme Tech Solutions Private Limited (Sample 73)",
+    "pan": "KRGCO6772H",
+    "gstin": "33KRGCO6772H1ZJ",
+    "udyam": "UDYAM-TN-00-9791654"
+  },
+  {
+    "name": "Sterling Industries (Sample 74)",
+    "pan": "NZVCZ6804L",
+    "gstin": "19NZVCZ6804L1ZZ",
+    "udyam": "UDYAM-WB-00-9751014"
+  },
+  {
+    "name": "Infiniti Tech Solutions Private Limited (Sample 75)",
+    "pan": "YFLCL9433M",
+    "gstin": "33YFLCL9433M1Z5",
+    "udyam": "UDYAM-TN-00-3098671"
+  },
+  {
+    "name": "Nova Infotech (Sample 76)",
+    "pan": "VTMCT0028R",
+    "gstin": "19VTMCT0028R1ZX",
+    "udyam": "UDYAM-WB-00-4721266"
+  },
+  {
+    "name": "Delta Global Trading (Sample 77)",
+    "pan": "XPACQ5720L",
+    "gstin": "07XPACQ5720L1ZF",
+    "udyam": "UDYAM-DL-00-5165395"
+  },
+  {
+    "name": "Sterling Global Trading (Sample 78)",
+    "pan": "MQZCI7302V",
+    "gstin": "27MQZCI7302V1Z6",
+    "udyam": "UDYAM-MH-00-7730581"
+  },
+  {
+    "name": "Nova Infotech (Sample 79)",
+    "pan": "EDSCO0278K",
+    "gstin": "32EDSCO0278K1ZJ",
+    "udyam": "UDYAM-KL-00-5952713"
+  },
+  {
+    "name": "Horizon Logistics India Pvt Ltd (Sample 80)",
+    "pan": "DJXCX4931W",
+    "gstin": "27DJXCX4931W1ZV",
+    "udyam": "UDYAM-MH-00-3720449"
+  },
+  {
+    "name": "Pinnacle Logistics India Pvt Ltd (Sample 81)",
+    "pan": "ICRCJ4714O",
+    "gstin": "33ICRCJ4714O1Z2",
+    "udyam": "UDYAM-TN-00-7964670"
+  },
+  {
+    "name": "Summit Industries (Sample 82)",
+    "pan": "URYCE8641H",
+    "gstin": "09URYCE8641H1ZN",
+    "udyam": "UDYAM-UP-00-3901434"
+  },
+  {
+    "name": "Trident Enterprises LLC (Sample 83)",
+    "pan": "NKQCH9015R",
+    "gstin": "07NKQCH9015R1Z7",
+    "udyam": "UDYAM-DL-00-2249294"
+  },
+  {
+    "name": "Omega Global Trading (Sample 84)",
+    "pan": "BESCC8996W",
+    "gstin": "07BESCC8996W1Z4",
+    "udyam": "UDYAM-DL-00-5221771"
+  },
+  {
+    "name": "Beacon Enterprises LLC (Sample 85)",
+    "pan": "DFDCZ4354R",
+    "gstin": "24DFDCZ4354R1Z8",
+    "udyam": "UDYAM-GJ-00-6039757"
+  },
+  {
+    "name": "Omega Logistics India Pvt Ltd (Sample 86)",
+    "pan": "QLRCL1855Y",
+    "gstin": "07QLRCL1855Y1Z8",
+    "udyam": "UDYAM-DL-00-4901113"
+  },
+  {
+    "name": "Summit Industries (Sample 87)",
+    "pan": "XVGCU9266C",
+    "gstin": "29XVGCU9266C1ZW",
+    "udyam": "UDYAM-KA-00-6551693"
+  },
+  {
+    "name": "Alpha Tech Solutions Private Limited (Sample 88)",
+    "pan": "BQOCU2560U",
+    "gstin": "27BQOCU2560U1ZY",
+    "udyam": "UDYAM-MH-00-2948620"
+  },
+  {
+    "name": "Zenith Manufacturing Corp (Sample 89)",
+    "pan": "KMICE3778M",
+    "gstin": "27KMICE3778M1Z8",
+    "udyam": "UDYAM-MH-00-7512141"
+  },
+  {
+    "name": "Vanguard Manufacturing Corp (Sample 90)",
+    "pan": "WKZCF8971F",
+    "gstin": "27WKZCF8971F1ZV",
+    "udyam": "UDYAM-MH-00-9484034"
+  },
+  {
+    "name": "Quantum Industries (Sample 91)",
+    "pan": "JBMCU6201E",
+    "gstin": "29JBMCU6201E1ZG",
+    "udyam": "UDYAM-KA-00-7734515"
+  },
+  {
+    "name": "Sterling Industries (Sample 92)",
+    "pan": "LOVCT6193Z",
+    "gstin": "07LOVCT6193Z1ZL",
+    "udyam": "UDYAM-DL-00-5316400"
+  },
+  {
+    "name": "Nova Industries (Sample 93)",
+    "pan": "LPNCK9336J",
+    "gstin": "24LPNCK9336J1ZL",
+    "udyam": "UDYAM-GJ-00-5545403"
+  },
+  {
+    "name": "Infiniti Industries (Sample 94)",
+    "pan": "HXWCU0497Y",
+    "gstin": "07HXWCU0497Y1ZE",
+    "udyam": "UDYAM-DL-00-7516681"
+  },
+  {
+    "name": "Beta Industries (Sample 95)",
+    "pan": "YCACK4425T",
+    "gstin": "29YCACK4425T1ZU",
+    "udyam": "UDYAM-KA-00-8701236"
+  },
+  {
+    "name": "Horizon Enterprises LLC (Sample 96)",
+    "pan": "LNOCV7766T",
+    "gstin": "09LNOCV7766T1ZU",
+    "udyam": "UDYAM-UP-00-1252922"
+  },
+  {
+    "name": "Nova Logistics India Pvt Ltd (Sample 97)",
+    "pan": "MOYCX2163M",
+    "gstin": "29MOYCX2163M1ZM",
+    "udyam": "UDYAM-KA-00-9822734"
+  },
+  {
+    "name": "Nova Enterprises LLC (Sample 98)",
+    "pan": "FOYCW2172B",
+    "gstin": "19FOYCW2172B1ZX",
+    "udyam": "UDYAM-WB-00-2213461"
+  },
+  {
+    "name": "Infiniti Infotech (Sample 99)",
+    "pan": "YWMCG7220Y",
+    "gstin": "33YWMCG7220Y1Z5",
+    "udyam": "UDYAM-TN-00-6278094"
+  },
+  {
+    "name": "Beta Global Trading (Sample 100)",
+    "pan": "KMYCJ8051K",
+    "gstin": "33KMYCJ8051K1ZI",
+    "udyam": "UDYAM-TN-00-4658152"
+  },
+  {
+    "name": "Horizon Enterprises LLC (Sample 101)",
+    "pan": "TQSCA7757F",
+    "gstin": "07TQSCA7757F1ZP",
+    "udyam": "UDYAM-DL-00-8506113"
+  },
+  {
+    "name": "Alpha Logistics India Pvt Ltd (Sample 102)",
+    "pan": "JLGCK3706W",
+    "gstin": "29JLGCK3706W1ZF",
+    "udyam": "UDYAM-KA-00-0134587"
+  },
+  {
+    "name": "Delta Infotech (Sample 103)",
+    "pan": "XHPCH9449L",
+    "gstin": "19XHPCH9449L1ZQ",
+    "udyam": "UDYAM-WB-00-7978876"
+  },
+  {
+    "name": "Beacon Manufacturing Corp (Sample 104)",
+    "pan": "NJXCD0555E",
+    "gstin": "07NJXCD0555E1ZA",
+    "udyam": "UDYAM-DL-00-3512505"
+  },
+  {
+    "name": "Acme Enterprises LLC (Sample 105)",
+    "pan": "NLBCO6302A",
+    "gstin": "27NLBCO6302A1ZD",
+    "udyam": "UDYAM-MH-00-5030990"
+  },
+  {
+    "name": "Beta Logistics India Pvt Ltd (Sample 106)",
+    "pan": "KTTCX6493M",
+    "gstin": "32KTTCX6493M1ZO",
+    "udyam": "UDYAM-KL-00-0981819"
+  },
+  {
+    "name": "Beacon Enterprises LLC (Sample 107)",
+    "pan": "SFACA9474M",
+    "gstin": "09SFACA9474M1ZE",
+    "udyam": "UDYAM-UP-00-2329718"
+  },
+  {
+    "name": "Orient Global Trading (Sample 108)",
+    "pan": "YXGCC1057B",
+    "gstin": "09YXGCC1057B1ZF",
+    "udyam": "UDYAM-UP-00-7422805"
+  },
+  {
+    "name": "Nexus Global Trading (Sample 109)",
+    "pan": "XOPCY6331V",
+    "gstin": "19XOPCY6331V1ZX",
+    "udyam": "UDYAM-WB-00-2309896"
+  },
+  {
+    "name": "Pinnacle Manufacturing Corp (Sample 110)",
+    "pan": "BIQCM7341M",
+    "gstin": "09BIQCM7341M1ZB",
+    "udyam": "UDYAM-UP-00-7483789"
+  },
+  {
+    "name": "Infiniti Industries (Sample 111)",
+    "pan": "NKGCK6980X",
+    "gstin": "09NKGCK6980X1ZC",
+    "udyam": "UDYAM-UP-00-0360085"
+  },
+  {
+    "name": "Nova Enterprises LLC (Sample 112)",
+    "pan": "WIYCA2177Y",
+    "gstin": "29WIYCA2177Y1ZU",
+    "udyam": "UDYAM-KA-00-9673232"
+  },
+  {
+    "name": "Pinnacle Infotech (Sample 113)",
+    "pan": "JGNCP4877K",
+    "gstin": "32JGNCP4877K1ZD",
+    "udyam": "UDYAM-KL-00-3452129"
+  },
+  {
+    "name": "Vanguard Enterprises LLC (Sample 114)",
+    "pan": "FFOCH4662P",
+    "gstin": "09FFOCH4662P1ZV",
+    "udyam": "UDYAM-UP-00-4731518"
+  },
+  {
+    "name": "Beacon Tech Solutions Private Limited (Sample 115)",
+    "pan": "VBVCB7482W",
+    "gstin": "27VBVCB7482W1Z9",
+    "udyam": "UDYAM-MH-00-0536664"
+  },
+  {
+    "name": "Alpha Tech Solutions Private Limited (Sample 116)",
+    "pan": "NKACX2908V",
+    "gstin": "32NKACX2908V1ZR",
+    "udyam": "UDYAM-KL-00-8910115"
+  },
+  {
+    "name": "Matrix Global Trading (Sample 117)",
+    "pan": "KJKCS2628C",
+    "gstin": "24KJKCS2628C1Z2",
+    "udyam": "UDYAM-GJ-00-0350014"
+  },
+  {
+    "name": "Horizon Industries (Sample 118)",
+    "pan": "ZZXCB2965I",
+    "gstin": "09ZZXCB2965I1Z2",
+    "udyam": "UDYAM-UP-00-9625618"
+  },
+  {
+    "name": "Quantum Industries (Sample 119)",
+    "pan": "DVVCC2558V",
+    "gstin": "27DVVCC2558V1ZY",
+    "udyam": "UDYAM-MH-00-3719759"
+  },
+  {
+    "name": "Delta Manufacturing Corp (Sample 120)",
+    "pan": "GBPCT9370I",
+    "gstin": "27GBPCT9370I1ZS",
+    "udyam": "UDYAM-MH-00-4394660"
+  },
+  {
+    "name": "Nexus Infotech (Sample 121)",
+    "pan": "BGJCZ6731A",
+    "gstin": "19BGJCZ6731A1ZJ",
+    "udyam": "UDYAM-WB-00-4710455"
+  },
+  {
+    "name": "Alpha Tech Solutions Private Limited (Sample 122)",
+    "pan": "JCPCK8047X",
+    "gstin": "07JCPCK8047X1ZZ",
+    "udyam": "UDYAM-DL-00-9951313"
+  },
+  {
+    "name": "Omega Tech Solutions Private Limited (Sample 123)",
+    "pan": "EHHCZ0226T",
+    "gstin": "32EHHCZ0226T1ZC",
+    "udyam": "UDYAM-KL-00-4103838"
+  },
+  {
+    "name": "Horizon Manufacturing Corp (Sample 124)",
+    "pan": "VWZCE3664F",
+    "gstin": "32VWZCE3664F1ZP",
+    "udyam": "UDYAM-KL-00-9264523"
+  },
+  {
+    "name": "Summit Tech Solutions Private Limited (Sample 125)",
+    "pan": "YFZCF6594W",
+    "gstin": "09YFZCF6594W1ZD",
+    "udyam": "UDYAM-UP-00-4268744"
+  },
+  {
+    "name": "Nexus Logistics India Pvt Ltd (Sample 126)",
+    "pan": "RSUCC4555W",
+    "gstin": "19RSUCC4555W1ZQ",
+    "udyam": "UDYAM-WB-00-5738560"
+  },
+  {
+    "name": "Summit Enterprises LLC (Sample 127)",
+    "pan": "QBZCV6937D",
+    "gstin": "29QBZCV6937D1Z0",
+    "udyam": "UDYAM-KA-00-0275623"
+  },
+  {
+    "name": "Trident Infotech (Sample 128)",
+    "pan": "NIACD2908X",
+    "gstin": "32NIACD2908X1Z9",
+    "udyam": "UDYAM-KL-00-3375307"
+  },
+  {
+    "name": "Horizon Tech Solutions Private Limited (Sample 129)",
+    "pan": "HVCCK6619H",
+    "gstin": "32HVCCK6619H1ZX",
+    "udyam": "UDYAM-KL-00-1159241"
+  },
+  {
+    "name": "Sterling Tech Solutions Private Limited (Sample 130)",
+    "pan": "TWLCN3727Z",
+    "gstin": "09TWLCN3727Z1Z4",
+    "udyam": "UDYAM-UP-00-5753116"
+  },
+  {
+    "name": "Beacon Infotech (Sample 131)",
+    "pan": "IKKCD3868W",
+    "gstin": "32IKKCD3868W1ZJ",
+    "udyam": "UDYAM-KL-00-9563213"
+  },
+  {
+    "name": "Beacon Manufacturing Corp (Sample 132)",
+    "pan": "KDJCF4599F",
+    "gstin": "33KDJCF4599F1ZZ",
+    "udyam": "UDYAM-TN-00-1218689"
+  },
+  {
+    "name": "Omega Enterprises LLC (Sample 133)",
+    "pan": "VZNCP4474F",
+    "gstin": "32VZNCP4474F1Z5",
+    "udyam": "UDYAM-KL-00-5720227"
+  },
+  {
+    "name": "Pinnacle Industries (Sample 134)",
+    "pan": "CCUCL5774G",
+    "gstin": "32CCUCL5774G1ZR",
+    "udyam": "UDYAM-KL-00-1872943"
+  },
+  {
+    "name": "Acme Global Trading (Sample 135)",
+    "pan": "ZUGCZ7686N",
+    "gstin": "07ZUGCZ7686N1ZA",
+    "udyam": "UDYAM-DL-00-6788555"
+  },
+  {
+    "name": "Horizon Infotech (Sample 136)",
+    "pan": "HOYCQ9609Z",
+    "gstin": "33HOYCQ9609Z1ZQ",
+    "udyam": "UDYAM-TN-00-9981827"
+  },
+  {
+    "name": "Sterling Manufacturing Corp (Sample 137)",
+    "pan": "DQQCM4680Q",
+    "gstin": "29DQQCM4680Q1ZH",
+    "udyam": "UDYAM-KA-00-6844588"
+  },
+  {
+    "name": "Acme Infotech (Sample 138)",
+    "pan": "RJBCR3984K",
+    "gstin": "07RJBCR3984K1ZI",
+    "udyam": "UDYAM-DL-00-3554360"
+  },
+  {
+    "name": "Acme Tech Solutions Private Limited (Sample 139)",
+    "pan": "DWLCA9499U",
+    "gstin": "07DWLCA9499U1ZJ",
+    "udyam": "UDYAM-DL-00-1926239"
+  },
+  {
+    "name": "Beta Manufacturing Corp (Sample 140)",
+    "pan": "QSTCN6704E",
+    "gstin": "33QSTCN6704E1ZE",
+    "udyam": "UDYAM-TN-00-5403186"
+  },
+  {
+    "name": "Apex Enterprises LLC (Sample 141)",
+    "pan": "JSCCK3238E",
+    "gstin": "32JSCCK3238E1Z9",
+    "udyam": "UDYAM-KL-00-0561327"
+  },
+  {
+    "name": "Orient Infotech (Sample 142)",
+    "pan": "LFXCE7539K",
+    "gstin": "09LFXCE7539K1Z8",
+    "udyam": "UDYAM-UP-00-2626729"
+  },
+  {
+    "name": "Vanguard Enterprises LLC (Sample 143)",
+    "pan": "NNTCJ6772M",
+    "gstin": "27NNTCJ6772M1Z7",
+    "udyam": "UDYAM-MH-00-2608033"
+  },
+  {
+    "name": "Trident Manufacturing Corp (Sample 144)",
+    "pan": "JRTCY0502B",
+    "gstin": "09JRTCY0502B1ZP",
+    "udyam": "UDYAM-UP-00-5654705"
+  },
+  {
+    "name": "Matrix Tech Solutions Private Limited (Sample 145)",
+    "pan": "INFCZ1357U",
+    "gstin": "33INFCZ1357U1Z4",
+    "udyam": "UDYAM-TN-00-3492291"
+  },
+  {
+    "name": "Vanguard Infotech (Sample 146)",
+    "pan": "TTDCW1043Q",
+    "gstin": "27TTDCW1043Q1ZG",
+    "udyam": "UDYAM-MH-00-1172870"
+  },
+  {
+    "name": "Matrix Industries (Sample 147)",
+    "pan": "BSOCC4508F",
+    "gstin": "09BSOCC4508F1ZN",
+    "udyam": "UDYAM-UP-00-1786170"
+  },
+  {
+    "name": "Nexus Tech Solutions Private Limited (Sample 148)",
+    "pan": "MJDCB5974K",
+    "gstin": "27MJDCB5974K1ZF",
+    "udyam": "UDYAM-MH-00-4720359"
+  },
+  {
+    "name": "Nexus Global Trading (Sample 149)",
+    "pan": "NBKCO8730O",
+    "gstin": "33NBKCO8730O1Z0",
+    "udyam": "UDYAM-TN-00-3277239"
+  },
+  {
+    "name": "Pinnacle Global Trading (Sample 150)",
+    "pan": "UDYCA2388K",
+    "gstin": "29UDYCA2388K1Z0",
+    "udyam": "UDYAM-KA-00-7373294"
+  }
+]

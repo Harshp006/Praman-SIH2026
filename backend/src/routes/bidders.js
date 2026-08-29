@@ -64,16 +64,16 @@ const uploadFields = upload.fields([
 // ─── Check definitions ────────────────────────────────────────────────────────
 
 const CHECK_DEFS = [
-  { label: "GST registration & return filing",          category: "statutory",       live: true,  weight: 15 },
-  { label: "PAN & Income Tax compliance",               category: "statutory",       live: true,  weight: 15 },
-  { label: "Udyam / MSME registration",                category: "statutory",       live: true,  weight: 10 },
-  { label: "Make in India / local content",             category: "tender_specific", live: false, weight: 10 },
-  { label: "EPFO / ESIC compliance",                   category: "statutory",       live: false, weight: 10 },
-  { label: "Startup India / NSIC / OEM authorization", category: "tender_specific", live: false, weight:  5 },
-  { label: "DigiLocker document verification",          category: "statutory",       live: false, weight: 10 },
-  { label: "Blacklisting / debarment",                  category: "statutory",       live: false, weight: 20 },
-  { label: "MCA21 company status",                      category: "statutory",       live: false, weight: 10 },
-  { label: "Tender-specific eligibility clause",        category: "tender_specific", live: true,  weight: 15 },
+  { label: "GST registration & return filing",          category: "statutory",       live: true,  weight: 20 },
+  { label: "PAN & Income Tax compliance",               category: "statutory",       live: true,  weight: 20 },
+  { label: "Udyam / MSME registration",                category: "statutory",       live: true,  weight: 15 },
+  { label: "Blacklisting / debarment",                  category: "statutory",       live: false, weight: 15 },
+  { label: "Tender-specific eligibility clause",        category: "tender_specific", live: true,  weight: 10 },
+  { label: "MCA21 company status",                      category: "statutory",       live: false, weight: 6 },
+  { label: "EPFO / ESIC compliance",                   category: "statutory",       live: false, weight: 5 },
+  { label: "Make in India / local content",             category: "tender_specific", live: false, weight: 5 },
+  { label: "Startup India / NSIC / OEM authorization", category: "tender_specific", live: false, weight: 2 },
+  { label: "DigiLocker document verification",          category: "statutory",       live: false, weight: 2 },
 ];
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -306,9 +306,15 @@ router.post("/:id/verify", requireAuth, async (req, res, next) => {
     const { score, risk } = computeScore(checks);
     console.log(`[Score] ${bidder.name}: ${score}/100 (${risk})`);
 
+    // Generate recommendation instantly
+    bidder.score = score;
+    bidder.risk = risk;
+    console.log(`[Ollama] Generating recommendation for ${bidder.name}…`);
+    const recommendation = await generateRecommendation(bidder, checks);
+
     await prisma.bidder.update({
       where: { id: bidder.id },
-      data:  { score, risk, recommendation: null }, // clear old recommendation
+      data:  { score, risk, recommendation },
     });
 
     await prisma.auditLog.create({
@@ -316,7 +322,7 @@ router.post("/:id/verify", requireAuth, async (req, res, next) => {
         bidderId:  bidder.id,
         officerId: req.officer.id,
         actor:     req.officer.name,
-        action:    `Verification run by ${req.officer.name}. ${checks.length} checks completed. Score: ${score}/100 (${risk} risk). Recommendation pending.`,
+        action:    `Verification run by ${req.officer.name}. ${checks.length} checks completed. Score: ${score}/100 (${risk} risk). AI Recommendation generated.`,
       },
     });
 
@@ -583,9 +589,9 @@ router.get("/:id/report", requireAuth, async (req, res, next) => {
     doc.fill(NAVY).font("Helvetica-Bold").fontSize(8).text("SCORING METHODOLOGY", 273, y + 6);
     doc.fill(MUTED).font("Helvetica").fontSize(7).text(
       "Score = Σ(check_weight × points) / Σ(total_weights) × 100\n" +
-      "PASS = full weight  |  WARN = 50% weight  |  FAIL/MISSING = 0\n" +
-      "Weight distribution: Blacklisting 20 | GST 15 | PAN 15 | Tender 15 |\n" +
-      "Udyam 10 | Make-in-India 10 | EPFO 10 | DigiLocker 10 | MCA 10 | NSIC 5\n" +
+      "Penalty: 1 critical fail = max 30 score | 2 = max 20 | 3 = max 10\n" +
+      "Weight distribution: GST 20 | PAN 20 | Udyam 15 | Blacklisting 15 | Tender 10 |\n" +
+      "MCA 6 | EPFO 5 | Local 5 | DigiLocker 2 | NSIC 2\n" +
       "Thresholds: ≥80 = Low Risk (APPROVE)  |  50–79 = Medium (REVIEW)  |  <50 = High (REJECT)",
       273, y + 18, { width: doc.page.width - 330 }
     );

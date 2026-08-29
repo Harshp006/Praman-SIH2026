@@ -142,16 +142,16 @@ function getTenderId(index) {
 // Generate check results for a bidder with given "quality" (0–1)
 function generateChecks(bidderId, quality) {
   const CHECK_DEFS = [
-    { label: "GST registration & return filing",          category: "statutory",       live: true,  weight: 15 },
-    { label: "PAN & Income Tax compliance",               category: "statutory",       live: true,  weight: 15 },
-    { label: "Udyam / MSME registration",                category: "statutory",       live: true,  weight: 10 },
-    { label: "Make in India / local content",             category: "tender_specific", live: false, weight: 10 },
-    { label: "EPFO / ESIC compliance",                   category: "statutory",       live: false, weight: 10 },
-    { label: "Startup India / NSIC / OEM authorization", category: "tender_specific", live: false, weight:  5 },
-    { label: "DigiLocker document verification",          category: "statutory",       live: false, weight: 10 },
-    { label: "Blacklisting / debarment",                  category: "statutory",       live: false, weight: 20 },
-    { label: "MCA21 company status",                      category: "statutory",       live: false, weight: 10 },
-    { label: "Tender-specific eligibility clause",        category: "tender_specific", live: true,  weight: 15 },
+    { label: "GST registration & return filing",          category: "statutory",       live: true,  weight: 20 },
+    { label: "PAN & Income Tax compliance",               category: "statutory",       live: true,  weight: 20 },
+    { label: "Udyam / MSME registration",                category: "statutory",       live: true,  weight: 15 },
+    { label: "Blacklisting / debarment",                  category: "statutory",       live: false, weight: 15 },
+    { label: "Tender-specific eligibility clause",        category: "tender_specific", live: true,  weight: 10 },
+    { label: "MCA21 company status",                      category: "statutory",       live: false, weight: 6 },
+    { label: "EPFO / ESIC compliance",                   category: "statutory",       live: false, weight: 5 },
+    { label: "Make in India / local content",             category: "tender_specific", live: false, weight: 5 },
+    { label: "Startup India / NSIC / OEM authorization", category: "tender_specific", live: false, weight:  2 },
+    { label: "DigiLocker document verification",          category: "statutory",       live: false, weight: 2 },
   ];
 
   const checks = [];
@@ -253,27 +253,30 @@ async function seedBidders() {
     tenders.push(tender);
   }
 
-  console.log(`[Seed] Seeding 300 realistic Indian bidders...`);
+  console.log(`[Seed] Seeding exact PDF bidders...`);
 
-  const TOTAL = 300;
-
-  // We are creating all bidders as 'pending_review' without scores or checks
-  // so the officer can run verification manually.
+  const biddersData = require('./bidders.json');
+  const TOTAL = biddersData.length;
 
   let created = 0;
 
   for (let i = 0; i < TOTAL; i++) {
-    const state = STATES[i % STATES.length];
-    const name = generateCompanyName(i);
-    const pan = generatePAN(i);
-    const gstin = generateGSTIN(i, state);
-    const udyam = generateUdyam(i);
+    const data = biddersData[i];
+    const name = data.name;
+    const pan = data.pan;
+    const gstin = data.gstin;
+    const udyam = data.udyam;
+    
+    const { computeScore } = require('../engines/scoring.js');
     
     // Assign bidder to one of the 25 tenders
     const tenderIndex = i % TENDER_NAMES.length;
     const tenderId = tenders[tenderIndex].tenderId;
     const tenderName = tenders[tenderIndex].name;
-    const status = "pending_review";
+    
+    // Randomly verify ~30% of bidders with a high score (quality 0.8 - 1.0)
+    const isPreVerified = Math.random() > 0.7;
+    const status = isPreVerified ? "verified" : "pending_review";
 
     try {
       const bidder = await prisma.bidder.create({
@@ -284,10 +287,37 @@ async function seedBidders() {
           udyam,
           tenderId,
           tenderName,
-          status: "pending_review",
+          status,
           createdById: officer.id,
         },
       });
+
+      if (isPreVerified) {
+        // Generate checks with high quality
+        const quality = 0.8 + Math.random() * 0.2; // 0.8 to 1.0
+        const checks = generateChecks(bidder.id, quality);
+        
+        await prisma.check.createMany({ data: checks });
+        
+        // Compute score using the actual engine
+        const { score, risk } = computeScore(checks);
+        
+        const recommendation = `Score: ${score}/100 (${risk} risk). ${bidder.name} meets all mandatory compliance thresholds and has been pre-verified for this demonstration. Recommend APPROVE.`;
+
+        await prisma.bidder.update({
+          where: { id: bidder.id },
+          data: { score, risk, recommendation }
+        });
+        
+        await prisma.auditLog.create({
+          data: {
+            bidderId:  bidder.id,
+            officerId: officer.id,
+            actor:     "System",
+            action:    `Automated compliance checks completed. Score: ${score}/100`,
+          },
+        });
+      }
 
       // Audit log (Initial Registration Only)
       await prisma.auditLog.create({

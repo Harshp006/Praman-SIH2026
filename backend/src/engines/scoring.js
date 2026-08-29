@@ -38,9 +38,20 @@ function computeScore(checks) {
     weightedPoints += check.weight * multiplier;
   }
 
-  const score = totalWeight > 0
+  const rawScore = totalWeight > 0
     ? Math.round((weightedPoints / totalWeight) * 100)
     : 0;
+
+  // Critical-check penalty — applied AFTER the raw score
+  const criticalChecks = ["GST registration & return filing", "PAN & Income Tax compliance", "Udyam / MSME registration"];
+  const failedCritical = checks.filter(c => criticalChecks.includes(c.label) && (c.state === "fail" || c.state === "missing"));
+
+  let score;
+  if (failedCritical.length >= 1) {
+    score = Math.min(rawScore, 30 - (failedCritical.length - 1) * 10);
+  } else {
+    score = rawScore;
+  }
 
   // Risk tiers per spec: 80-100 low · 50-79 medium · <50 high
   const risk =

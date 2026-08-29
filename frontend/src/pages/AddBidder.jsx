@@ -159,7 +159,7 @@ const AddBidder = () => {
         <div className="card mb-6">
           <div className="section-bar">REGISTRATION NUMBERS & DOCUMENT UPLOADS</div>
           <div className="card-body">
-            <div className="grid gap-6" style={{ gridTemplateColumns: '1fr 1fr 1fr' }}>
+            <div className="grid gap-6" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))' }}>
               <div>
                 <label className="text-xs font-bold mb-1 block uppercase text-muted">
                   PAN Number <span style={{ color: 'var(--status-rejected)' }}>*</span>

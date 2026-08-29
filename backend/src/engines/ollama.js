@@ -35,10 +35,11 @@ ${checkLines}
 
 TASK
 ----
-Write a concise 2–3 sentence plain-English recommendation for this bidder.
-Reference specific failed or warned checks by name.
-Close with a suggested action: APPROVE, FLAG FOR REVIEW, or REJECT.
-Do not include headers. Use plain text only. Be direct and professional.`;
+Write a deep, comprehensive 8-12 line summarization and explanation of this bidder's compliance profile.
+Analyze the specific failed or warned checks in detail and explain the potential risks or implications of their current status.
+Based on your deep analysis, make it extremely clear whether the officer should ACCEPT, REJECT, or FLAG FOR REVIEW.
+Close with a final suggested action: APPROVE, FLAG FOR REVIEW, or REJECT.
+Do not include headers. Use plain text only. Be professional and thorough.`;
 }
 
 // ─── Rule-based fallback ─────────────────────────────────────────────────────
@@ -92,7 +93,17 @@ function buildFallbackRecommendation(bidder, checks) {
 async function generateRecommendation(bidder, checks) {
   const prompt = buildPrompt(bidder, checks);
 
+  console.log("\n=======================================================");
+  console.log(`🧠 [Ollama AI] INITIATING COMPLIANCE ANALYSIS`);
+  console.log(`👤 Target: ${bidder.name} | Score: ${bidder.score}/100`);
+  console.log("=======================================================");
+  console.log(`[PROMPT SENT TO LOCAL LLM (${config.OLLAMA_MODEL})]:\n`);
+  console.log(prompt);
+  console.log("\n=======================================================");
+  console.log("⏳ Awaiting response from local neural network...");
+
   try {
+    const startTime = Date.now();
     const response = await axios.post(
       `${config.OLLAMA_BASE_URL}/api/generate`,
       {
@@ -109,10 +120,17 @@ async function generateRecommendation(bidder, checks) {
 
     const text = (response.data?.response || "").trim();
     if (!text) throw new Error("Empty response from Ollama");
+    
+    const timeTaken = ((Date.now() - startTime) / 1000).toFixed(2);
+    console.log(`\n✅ [Ollama AI] RESPONSE RECEIVED in ${timeTaken}s`);
+    console.log("=======================================================");
+    console.log(text);
+    console.log("=======================================================\n");
+
     return text;
 
   } catch (err) {
-    console.warn(`[Ollama] Unreachable or error — using fallback. Reason: ${err.message}`);
+    console.warn(`\n⚠️ [Ollama AI] Unreachable or error — using fallback. Reason: ${err.message}`);
     return buildFallbackRecommendation(bidder, checks);
   }
 }

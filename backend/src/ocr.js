@@ -1,4 +1,4 @@
-﻿/**
+/**
  * ocr.js — Tesseract.js OCR extraction for Praman uploaded documents
  *
  * Extracts text from an image or PDF file using tesseract.js WASM engine,
@@ -26,6 +26,11 @@ const UDYAM_PATTERN = /UDYAM-[A-Z]{2}-\d{2}-\d{7}/g;
  * @returns {Promise<string>} — extracted OCR text, or empty string on failure
  */
 async function extractText(filePath) {
+  if (filePath.toLowerCase().endsWith('.pdf')) {
+    console.warn(`[OCR] Skipping PDF file (not natively supported by tesseract.js without image conversion): ${path.basename(filePath)}`);
+    return '';
+  }
+  
   try {
     const { createWorker } = require('tesseract.js');
     const worker = await createWorker('eng', 1, {
