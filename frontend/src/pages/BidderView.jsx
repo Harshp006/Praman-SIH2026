@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import {
   ArrowLeft, RefreshCw, FileText, Check, X, Flag,
-  Building2, Brain, Edit, Trash2, Download,
+  Building2, Brain, Edit, Trash2, Download, Eye, Upload, Plus,
   Wifi, WifiOff, AlertCircle, Clock, CheckCircle2
 } from 'lucide-react';
 import api from '../api';
@@ -177,10 +177,10 @@ const BidderView = () => {
     }
   };
 
-  // Download PDF
+  // Download PDF Report
   const downloadPDF = () => {
     const token = localStorage.getItem('praman_token');
-    const url = `http://localhost:4000/api/bidders/${id}/report`;
+    const url = `${api.defaults.baseURL}/bidders/${id}/report`;
     const a = document.createElement('a');
     a.href = url;
     a.target = '_blank';
@@ -195,6 +195,77 @@ const BidderView = () => {
         URL.revokeObjectURL(blobUrl);
       })
       .catch(() => setActionError('PDF generation failed.'));
+  };
+
+  // View Single Document PDF in new browser tab
+  const handleViewDoc = (docId) => {
+    const token = localStorage.getItem('praman_token');
+    const url = `${api.defaults.baseURL}/bidders/${id}/documents/${docId}/view`;
+    fetch(url, { headers: { Authorization: `Bearer ${token}` } })
+      .then(res => {
+        if (!res.ok) throw new Error('Document view failed');
+        return res.blob();
+      })
+      .then(blob => {
+        const blobUrl = URL.createObjectURL(blob);
+        window.open(blobUrl, '_blank');
+      })
+      .catch(() => {
+        setActionError('Failed to view document PDF.');
+      });
+  };
+
+  // Download Single Document PDF file
+  const handleDownloadDoc = (docId, fileName) => {
+    const token = localStorage.getItem('praman_token');
+    const url = `${api.defaults.baseURL}/bidders/${id}/documents/${docId}/download`;
+    fetch(url, { headers: { Authorization: `Bearer ${token}` } })
+      .then(res => {
+        if (!res.ok) throw new Error('Document download failed');
+        return res.blob();
+      })
+      .then(blob => {
+        const blobUrl = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = blobUrl;
+        a.download = fileName || 'Document.pdf';
+        a.click();
+        URL.revokeObjectURL(blobUrl);
+      })
+      .catch(() => {
+        setActionError('Failed to download document PDF.');
+      });
+  };
+
+  // Upload Additional Document
+  const uploadDocInputRef = React.useRef(null);
+  const [uploadingDoc, setUploadingDoc] = useState(false);
+
+  const handleUploadNewDoc = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setUploadingDoc(true);
+    setActionError('');
+    setSuccessMsg('');
+
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('type', file.name.split('.')[0].replace(/[^a-zA-Z0-9]/g, ' '));
+
+      await api.post(`/bidders/${id}/documents`, formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      });
+
+      setSuccessMsg(`Document '${file.name}' uploaded successfully.`);
+      await fetchBidder();
+    } catch (err) {
+      setActionError(err.response?.data?.error || 'Document upload failed.');
+    } finally {
+      setUploadingDoc(false);
+      if (uploadDocInputRef.current) uploadDocInputRef.current.value = '';
+    }
   };
 
   if (loading) {
@@ -344,25 +415,212 @@ const BidderView = () => {
             )}
           </div>
 
-          {/* Documents */}
-          <div>
-            <div className="section-bar">UPLOADED DOCUMENTS — {bidder.documents?.length || 0} FILES</div>
-            <div style={{ border: '1px solid var(--border)', borderTop: 'none', backgroundColor: 'var(--surface)' }}>
-              {!bidder.documents?.length ? (
-                <div className="text-center text-muted font-bold uppercase text-sm p-6">No documents uploaded.</div>
-              ) : bidder.documents.map((doc, idx) => (
-                <div key={doc.id} className="flex items-center gap-3 p-3"
-                  style={{ borderBottom: idx !== bidder.documents.length - 1 ? '1px solid var(--border)' : 'none' }}>
-                  <FileText size={16} style={{ color: 'var(--navy-dark)', flexShrink: 0 }} />
-                  <div className="flex-1">
-                    <div className="font-bold text-sm uppercase">{doc.type} Certificate</div>
-                    <div className="text-xs text-muted">{doc.fileName}</div>
-                  </div>
-                  <span style={{ fontSize: '9px', fontWeight: 700, padding: '2px 6px', border: '1px solid var(--status-approved)', color: 'var(--status-approved)', borderRadius: '2px' }}>
-                    UPLOADED
-                  </span>
+          {/* Documents Section */}
+          <div style={{
+            border: '1px solid var(--border)',
+            borderRadius: '2px',
+            backgroundColor: 'var(--surface)',
+            boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
+            overflow: 'hidden'
+          }}>
+            {/* Header */}
+            <div style={{
+              backgroundColor: 'var(--navy-dark)',
+              color: 'white',
+              padding: '1.25rem 1.5rem',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              flexWrap: 'wrap',
+              gap: '1rem'
+            }}>
+              <div>
+                <div style={{
+                  fontSize: '1rem',
+                  fontWeight: 700,
+                  letterSpacing: '0.5px',
+                  textTransform: 'uppercase'
+                }}>
+                  UPLOADED DOCUMENTS — {bidder.documents?.length || 0} FILES
                 </div>
-              ))}
+                <div style={{
+                  fontSize: '0.8rem',
+                  color: '#C7D0DA',
+                  marginTop: '2px',
+                  fontWeight: 500
+                }}>
+                  Supporting documents submitted by the bidder for this tender.
+                </div>
+              </div>
+
+              <input
+                type="file"
+                ref={uploadDocInputRef}
+                onChange={handleUploadNewDoc}
+                accept=".pdf,.jpg,.jpeg,.png"
+                style={{ display: 'none' }}
+              />
+
+              <button
+                onClick={() => uploadDocInputRef.current?.click()}
+                disabled={uploadingDoc}
+                className="btn"
+                style={{
+                  backgroundColor: 'var(--gold)',
+                  color: 'var(--navy-dark)',
+                  fontWeight: 700,
+                  fontSize: '0.75rem',
+                  padding: '0.4rem 0.85rem',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '0.4rem',
+                  border: 'none',
+                  borderRadius: '2px'
+                }}
+              >
+                {uploadingDoc ? (
+                  <span className="spinner" style={{ width: 12, height: 12, borderWidth: 2, borderColor: 'var(--navy-dark)', borderTopColor: 'transparent' }}></span>
+                ) : (
+                  <Upload size={14} />
+                )}
+                {uploadingDoc ? 'UPLOADING...' : 'UPLOAD DOCUMENT'}
+              </button>
+            </div>
+
+            {/* Document Repository Table */}
+            <div style={{ overflowX: 'auto' }}>
+              {!bidder.documents?.length ? (
+                <div className="text-center text-muted font-bold uppercase text-sm p-8">
+                  No documents uploaded for this bidder.
+                </div>
+              ) : (
+                <table className="data-table" style={{ margin: 0, width: '100%', borderCollapse: 'collapse' }}>
+                  <thead>
+                    <tr style={{ backgroundColor: 'var(--surface-muted)', borderBottom: '1px solid var(--border)' }}>
+                      <th style={{ width: '40px', padding: '0.75rem 1rem', textAlign: 'center', fontSize: '0.7rem', fontWeight: 700, color: 'var(--text-muted)' }}>#</th>
+                      <th style={{ padding: '0.75rem 1rem', fontSize: '0.7rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase' }}>Document Name</th>
+                      <th style={{ padding: '0.75rem 1rem', fontSize: '0.7rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', width: '120px' }}>File Details</th>
+                      <th style={{ padding: '0.75rem 1rem', fontSize: '0.7rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', width: '110px' }}>Uploaded Date</th>
+                      <th style={{ padding: '0.75rem 1rem', fontSize: '0.7rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', width: '120px' }}>Status</th>
+                      <th style={{ padding: '0.75rem 1rem', fontSize: '0.7rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', textAlign: 'right', width: '170px' }}>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {bidder.documents.map((doc, idx) => {
+                      const formattedTitle = doc.type.toLowerCase().includes('certificate') ||
+                        doc.type.toLowerCase().includes('undertaking') ||
+                        doc.type.toLowerCase().includes('declaration') ||
+                        doc.type.toLowerCase().includes('card') ||
+                        doc.type.toLowerCase().includes('letter')
+                        ? doc.type
+                        : `${doc.type} Certificate`;
+
+                      const uploadDateStr = doc.uploadedAt
+                        ? new Date(doc.uploadedAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })
+                        : 'Recent';
+
+                      return (
+                        <tr key={doc.id} style={{ borderBottom: idx !== bidder.documents.length - 1 ? '1px solid var(--border)' : 'none', backgroundColor: idx % 2 === 0 ? 'var(--surface)' : '#FAFCFE' }}>
+                          {/* Index */}
+                          <td style={{ padding: '0.85rem 1rem', textAlign: 'center', fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-muted)' }}>
+                            {idx + 1}
+                          </td>
+
+                          {/* Document Name & Filename */}
+                          <td style={{ padding: '0.85rem 1rem' }}>
+                            <div className="flex items-start gap-3">
+                              <div style={{
+                                padding: '6px',
+                                backgroundColor: '#EEF2F6',
+                                borderRadius: '4px',
+                                color: 'var(--navy-dark)',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                flexShrink: 0,
+                                marginTop: '2px'
+                              }}>
+                                <FileText size={18} />
+                              </div>
+                              <div style={{ minWidth: 0, flex: 1 }}>
+                                <div className="font-bold text-sm uppercase truncate" style={{ color: 'var(--navy-dark)', letterSpacing: '0.3px' }}>
+                                  {formattedTitle}
+                                </div>
+                                <div className="text-xs text-muted truncate" style={{ fontFamily: 'monospace', fontSize: '0.75rem', marginTop: '2px', maxWidth: '320px' }} title={doc.fileName}>
+                                  {doc.fileName}
+                                </div>
+                              </div>
+                            </div>
+                          </td>
+
+                          {/* File Details */}
+                          <td style={{ padding: '0.85rem 1rem', verticalAlign: 'middle' }}>
+                            <span style={{
+                              fontSize: '10px',
+                              fontWeight: 700,
+                              padding: '2px 8px',
+                              backgroundColor: '#F1F5F9',
+                              color: '#475569',
+                              borderRadius: '3px',
+                              letterSpacing: '0.5px',
+                              display: 'inline-block'
+                            }}>
+                              PDF • 420 KB
+                            </span>
+                          </td>
+
+                          {/* Uploaded Date */}
+                          <td style={{ padding: '0.85rem 1rem', verticalAlign: 'middle', fontSize: '0.78rem', fontWeight: 600, color: 'var(--text-muted)' }}>
+                            {uploadDateStr}
+                          </td>
+
+                          {/* Status */}
+                          <td style={{ padding: '0.85rem 1rem', verticalAlign: 'middle' }}>
+                            <span style={{
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              gap: '4px',
+                              fontSize: '10px',
+                              fontWeight: 700,
+                              padding: '3px 8px',
+                              backgroundColor: '#E6F4EA',
+                              color: '#1E7A34',
+                              border: '1px solid #A7F3D0',
+                              borderRadius: '3px',
+                              textTransform: 'uppercase'
+                            }}>
+                              <CheckCircle2 size={11} /> UPLOADED
+                            </span>
+                          </td>
+
+                          {/* Actions */}
+                          <td style={{ padding: '0.85rem 1rem', textAlign: 'right', verticalAlign: 'middle' }}>
+                            <div className="flex items-center justify-end gap-2">
+                              <button
+                                onClick={() => handleViewDoc(doc.id)}
+                                className="btn btn-outline text-xs"
+                                style={{ padding: '0.25rem 0.55rem', gap: '0.3rem', fontSize: '0.7rem', fontWeight: 700 }}
+                                title="View PDF Document in new tab"
+                              >
+                                <Eye size={12} /> VIEW
+                              </button>
+
+                              <button
+                                onClick={() => handleDownloadDoc(doc.id, doc.fileName)}
+                                className="btn btn-outline text-xs"
+                                style={{ padding: '0.25rem 0.55rem', gap: '0.3rem', fontSize: '0.7rem', fontWeight: 700 }}
+                                title="Download PDF File"
+                              >
+                                <Download size={12} /> DOWNLOAD
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              )}
             </div>
           </div>
 

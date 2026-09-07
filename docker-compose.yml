@@ -35,6 +35,7 @@ services:
       OLLAMA_MODEL: "llama3.2:3b"
       PORT: "4000"
       UPLOADS_DIR: "/uploads"
+      PRAMAN_API_KEY: "praman_demo_secure_key_2026"
     ports:
       - "4000:4000"  # host 4000 → container 4000
     volumes:

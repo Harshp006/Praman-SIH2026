@@ -5,6 +5,16 @@
 
 "use strict";
 
+try {
+  require("dotenv").config();
+} catch (_e) {
+  // dotenv optional if process.env provided directly
+}
+
+if (!process.env.DATABASE_URL) {
+  process.env.DATABASE_URL = "postgresql://praman:praman_local@localhost:7432/praman?schema=public";
+}
+
 module.exports = {
   PORT:            process.env.PORT            || "4000",
   NODE_ENV:        process.env.NODE_ENV        || "development",
@@ -15,10 +25,13 @@ module.exports = {
   JWT_EXPIRES_IN:  process.env.JWT_EXPIRES_IN  || "8h",
 
   // Ollama — spec requires 8 s timeout; fallback fires automatically on expiry
-  OLLAMA_BASE_URL: process.env.OLLAMA_BASE_URL || "http://ollama:11434",
+  OLLAMA_BASE_URL: process.env.OLLAMA_BASE_URL || "http://localhost:11434",
   OLLAMA_MODEL:    process.env.OLLAMA_MODEL    || "llama3.2:3b",
   OLLAMA_TIMEOUT:  60_000, // Increased to 60s for hackathon demo to ensure LLM has enough time to respond
 
   // Uploads directory (absolute inside container; relative on host dev)
   UPLOADS_DIR: process.env.UPLOADS_DIR || "/uploads",
+
+  // PRAMAN API Key for external system integration (e.g. GeM)
+  PRAMAN_API_KEY: process.env.PRAMAN_API_KEY || "praman_demo_secure_key_2026",
 };

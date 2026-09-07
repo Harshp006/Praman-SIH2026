@@ -561,6 +561,110 @@ router.post("/:id/decision", requireAuth, async (req, res, next) => {
   } catch (err) { next(err); }
 });
 
+// ─── GET /api/bidders/:bidderId/documents/:documentId/view ────────────────────
+
+router.get("/:bidderId/documents/:documentId/view", requireAuth, async (req, res, next) => {
+  try {
+    const { bidderId, documentId } = req.params;
+    const document = await prisma.document.findFirst({
+      where: { id: documentId, bidderId: bidderId },
+      include: { bidder: true },
+    });
+
+    if (!document) {
+      return res.status(404).json({ error: "Document not found or access denied." });
+    }
+
+    res.setHeader("Content-Type", "application/pdf");
+    res.setHeader("Content-Disposition", `inline; filename="${document.fileName}"`);
+
+    const diskPath = path.isAbsolute(document.filePath)
+      ? document.filePath
+      : path.join(config.UPLOADS_DIR, bidderId, path.basename(document.filePath));
+
+    if (fs.existsSync(diskPath)) {
+      return fs.createReadStream(diskPath).pipe(res);
+    }
+
+    const { buildDemoPDF } = require("../utils/pdfGenerator");
+    buildDemoPDF(res, document, document.bidder);
+  } catch (err) {
+    next(err);
+  }
+});
+
+// ─── GET /api/bidders/:bidderId/documents/:documentId/download ────────────────
+
+router.get("/:bidderId/documents/:documentId/download", requireAuth, async (req, res, next) => {
+  try {
+    const { bidderId, documentId } = req.params;
+    const document = await prisma.document.findFirst({
+      where: { id: documentId, bidderId: bidderId },
+      include: { bidder: true },
+    });
+
+    if (!document) {
+      return res.status(404).json({ error: "Document not found or access denied." });
+    }
+
+    res.setHeader("Content-Type", "application/pdf");
+    res.setHeader("Content-Disposition", `attachment; filename="${document.fileName}"`);
+
+    const diskPath = path.isAbsolute(document.filePath)
+      ? document.filePath
+      : path.join(config.UPLOADS_DIR, bidderId, path.basename(document.filePath));
+
+    if (fs.existsSync(diskPath)) {
+      return fs.createReadStream(diskPath).pipe(res);
+    }
+
+    const { buildDemoPDF } = require("../utils/pdfGenerator");
+    buildDemoPDF(res, document, document.bidder);
+  } catch (err) {
+    next(err);
+  }
+});
+
+// ─── POST /api/bidders/:id/documents (Upload single additional document) ──────
+
+router.post("/:id/documents", requireAuth, (req, res, next) => {
+  upload.single("file")(req, res, async (uploadErr) => {
+    if (uploadErr) return res.status(400).json({ error: uploadErr.message });
+    if (!req.file) return res.status(400).json({ error: "No document file uploaded." });
+
+    try {
+      const bidder = await prisma.bidder.findUnique({ where: { id: req.params.id } });
+      if (!bidder) return notFound(res, req.params.id);
+
+      const type = req.body.type || "Additional Document";
+      const originalName = req.file.originalname;
+      const newPath = moveUploadedFile(req.file.path, bidder.id, originalName);
+
+      const newDoc = await prisma.document.create({
+        data: {
+          bidderId: bidder.id,
+          type,
+          fileName: originalName,
+          filePath: newPath,
+        },
+      });
+
+      await prisma.auditLog.create({
+        data: {
+          bidderId: bidder.id,
+          officerId: req.officer.id,
+          actor: req.officer.name,
+          action: `Additional document '${originalName}' (${type}) uploaded by ${req.officer.name}.`,
+        },
+      });
+
+      res.status(201).json(newDoc);
+    } catch (err) {
+      next(err);
+    }
+  });
+});
+
 // ─── GET /api/bidders/:id/audit ───────────────────────────────────────────────
 
 router.get("/:id/audit", requireAuth, async (req, res, next) => {

@@ -19,6 +19,7 @@ const authRoutes   = require("./routes/auth");
 const bidderRoutes = require("./routes/bidders");
 const dashRoutes   = require("./routes/dashboard");
 const tenderRoutes = require("./routes/tenders");
+const apiV1Routes  = require("./routes/apiV1");
 const { isOllamaReady } = require("./engines/ollama");
 
 const { PrismaClient } = require("@prisma/client");
@@ -33,7 +34,7 @@ app.use(helmet());
 app.use(cors({
   origin: "*", // frontend on different port in dev
   methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
-  allowedHeaders: ["Content-Type", "Authorization"],
+  allowedHeaders: ["Content-Type", "Authorization", "x-api-key"],
 }));
 app.use(morgan(config.NODE_ENV === "production" ? "combined" : "dev"));
 app.use(express.json({ limit: "1mb" }));
@@ -49,6 +50,7 @@ app.use("/api/auth",      authRoutes);   // backward-compat prefix for existing 
 app.use("/api/bidders",   bidderRoutes);
 app.use("/api/tenders",   tenderRoutes);
 app.use("/api/dashboard", dashRoutes);
+app.use("/api/v1",        apiV1Routes);  // PRAMAN External Integration API v1
 
 /**
  * GET /api/audit — Global audit trail (paginated)

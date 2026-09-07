@@ -84,6 +84,35 @@ function buildFallbackRecommendation(bidder, checks) {
 }
 
 
+/**
+ * Resolves an active Ollama base URL by testing candidates:
+ * 1. config.OLLAMA_BASE_URL
+ * 2. http://localhost:11434
+ * 3. http://127.0.0.1:11434
+ * 4. http://host.docker.internal:11434
+ */
+async function resolveOllamaBaseUrl() {
+  const candidates = [
+    config.OLLAMA_BASE_URL,
+    "http://localhost:11434",
+    "http://127.0.0.1:11434",
+    "http://host.docker.internal:11434",
+  ];
+  const uniqueUrls = [...new Set(candidates.filter(Boolean))];
+
+  for (const url of uniqueUrls) {
+    try {
+      const res = await axios.get(`${url}/api/tags`, { timeout: 2500 });
+      if (res.status === 200 && Array.isArray(res.data?.models)) {
+        return url;
+      }
+    } catch (_e) {
+      // try next candidate
+    }
+  }
+  return config.OLLAMA_BASE_URL || "http://localhost:11434";
+}
+
 // ─── Main export ─────────────────────────────────────────────────────────────
 
 /**
@@ -93,10 +122,12 @@ function buildFallbackRecommendation(bidder, checks) {
  */
 async function generateRecommendation(bidder, checks) {
   const prompt = buildPrompt(bidder, checks);
+  const baseUrl = await resolveOllamaBaseUrl();
 
   console.log("\n=======================================================");
   console.log(`🧠 [Ollama AI] INITIATING COMPLIANCE ANALYSIS`);
   console.log(`👤 Target: ${bidder.name} | Score: ${bidder.score}/100`);
+  console.log(`🌐 Ollama Endpoint: ${baseUrl}`);
   console.log("=======================================================");
   console.log(`[PROMPT SENT TO LOCAL LLM (${config.OLLAMA_MODEL})]:\n`);
   console.log(prompt);
@@ -106,7 +137,7 @@ async function generateRecommendation(bidder, checks) {
   try {
     const startTime = Date.now();
     const response = await axios.post(
-      `${config.OLLAMA_BASE_URL}/api/generate`,
+      `${baseUrl}/api/generate`,
       {
         model:  config.OLLAMA_MODEL,
         prompt,
@@ -142,9 +173,11 @@ async function generateRecommendation(bidder, checks) {
  */
 async function isOllamaReady() {
   try {
-    const res = await axios.get(`${config.OLLAMA_BASE_URL}/api/tags`, { timeout: 3000 });
+    const baseUrl = await resolveOllamaBaseUrl();
+    const res = await axios.get(`${baseUrl}/api/tags`, { timeout: 3000 });
     const models = res.data?.models || [];
-    return models.some(m => m.name.startsWith(config.OLLAMA_MODEL.split(":")[0]));
+    const modelPrefix = config.OLLAMA_MODEL.split(":")[0];
+    return models.some(m => m.name === config.OLLAMA_MODEL || m.name.startsWith(modelPrefix) || m.model === config.OLLAMA_MODEL);
   } catch {
     return false;
   }
