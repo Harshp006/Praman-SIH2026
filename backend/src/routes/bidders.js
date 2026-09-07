@@ -472,22 +472,50 @@ router.delete("/:id", requireAuth, async (req, res, next) => {
 router.post("/:id/decision", requireAuth, async (req, res, next) => {
   try {
     const { action, note } = req.body;
-    if (!action || !["approve", "reject"].includes(action))
-      return res.status(400).json({ error: "action must be 'approve' or 'reject'." });
+    if (!action || !["approve", "reject", "flag_review", "overturn"].includes(action))
+      return res.status(400).json({ error: "action must be 'approve', 'reject', 'flag_review', or 'overturn'." });
 
     const bidder = await prisma.bidder.findUnique({ where: { id: req.params.id } });
     if (!bidder) return notFound(res, req.params.id);
 
-    const newStatus = action === "approve" ? "approved" : "rejected";
+    const currentStatus = bidder.status;
+
+    // Enforce state transitions
+    if (action === "overturn") {
+      if (currentStatus !== "approved" && currentStatus !== "rejected") {
+        return res.status(400).json({ error: "Cannot overturn decision unless bidder is APPROVED or REJECTED." });
+      }
+    } else if (action === "flag_review") {
+      if (currentStatus !== "pending_review") {
+        return res.status(400).json({ error: "Cannot flag for review unless status is pending review." });
+      }
+    } else if (action === "approve" || action === "reject") {
+      if (currentStatus !== "pending_review" && currentStatus !== "flagged_for_review") {
+        return res.status(400).json({ error: `Cannot ${action} bidder when current status is ${currentStatus}.` });
+      }
+    }
+
+    let newStatus;
+    let actionDesc;
+
+    if (action === "approve") {
+      newStatus = "approved";
+      actionDesc = `APPROVED by Officer ${req.officer.name}. Bid forwarded to procurement committee.`;
+    } else if (action === "reject") {
+      newStatus = "rejected";
+      actionDesc = `REJECTED by Officer ${req.officer.name}. Bid rejected based on compliance review.`;
+    } else if (action === "flag_review") {
+      newStatus = "flagged_for_review";
+      actionDesc = `FLAGGED FOR REVIEW by Officer ${req.officer.name}. Deferring decision.`;
+    } else if (action === "overturn") {
+      newStatus = "pending_review";
+      actionDesc = `OVERTURNED decision by Officer ${req.officer.name}. Decision reset to pending review.`;
+    }
 
     await prisma.bidder.update({
       where: { id: bidder.id },
       data:  { status: newStatus },
     });
-
-    const actionDesc = action === "approve"
-      ? `APPROVED by Officer ${req.officer.name}. Bid forwarded to procurement committee.`
-      : `REJECTED by Officer ${req.officer.name}. Bid rejected based on compliance review.`;
 
     await prisma.auditLog.create({
       data: {
@@ -501,12 +529,20 @@ router.post("/:id/decision", requireAuth, async (req, res, next) => {
     // AUTO REJECT LOGIC
     if (action === "approve") {
       const otherBidders = await prisma.bidder.findMany({
-        where: { tenderId: bidder.tenderId, status: "pending_review", id: { not: bidder.id } }
+        where: {
+          tenderId: bidder.tenderId,
+          status: { in: ["pending_review", "flagged_for_review"] },
+          id: { not: bidder.id }
+        }
       });
       
       if (otherBidders.length > 0) {
         await prisma.bidder.updateMany({
-          where: { tenderId: bidder.tenderId, status: "pending_review", id: { not: bidder.id } },
+          where: {
+            tenderId: bidder.tenderId,
+            status: { in: ["pending_review", "flagged_for_review"] },
+            id: { not: bidder.id }
+          },
           data: { status: "rejected" }
         });
 
@@ -521,7 +557,7 @@ router.post("/:id/decision", requireAuth, async (req, res, next) => {
       }
     }
 
-    res.json({ message: `Bid ${action}d successfully.`, id: bidder.id, status: newStatus });
+    res.json({ message: `Bid decision applied successfully.`, id: bidder.id, status: newStatus });
   } catch (err) { next(err); }
 });
 

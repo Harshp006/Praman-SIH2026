@@ -12,7 +12,7 @@ import Badge from '../components/Badge';
 
 const OllamaStatus = () => {
   const [status, setStatus] = useState(null);
-  const [model, setModel]   = useState('');
+  const [model, setModel] = useState('');
 
   useEffect(() => {
     api.get('/health')
@@ -39,11 +39,11 @@ const OllamaStatus = () => {
 
 const CheckIcon = ({ state }) => {
   const map = {
-    pass:    { bg: 'var(--status-approved)', icon: <Check size={13} /> },
-    fail:    { bg: 'var(--status-rejected)', icon: <X size={13} /> },
-    warn:    { bg: 'var(--status-pending)',  icon: <Flag size={11} /> },
+    pass: { bg: 'var(--status-approved)', icon: <Check size={13} /> },
+    fail: { bg: 'var(--status-rejected)', icon: <X size={13} /> },
+    warn: { bg: 'var(--status-pending)', icon: <Flag size={11} /> },
     missing: { bg: '#9CA3AF', icon: <span style={{ fontSize: '10px', fontWeight: 700 }}>?</span> },
-    na:      { bg: '#CBD5E1', icon: <span style={{ fontSize: '10px', fontWeight: 700 }}>N/A</span> },
+    na: { bg: '#CBD5E1', icon: <span style={{ fontSize: '10px', fontWeight: 700 }}>N/A</span> },
   };
   const m = map[state] || map.missing;
   return (
@@ -78,16 +78,16 @@ const BidderView = () => {
   const { id } = useParams();
   const navigate = useNavigate();
 
-  const [bidder,   setBidder]   = useState(null);
-  const [loading,  setLoading]  = useState(true);
+  const [bidder, setBidder] = useState(null);
+  const [loading, setLoading] = useState(true);
   const [verifying, setVerifying] = useState(false);
   const [recommending, setRecommending] = useState(false);
-  const [submitting,   setSubmitting]   = useState(false);
-  const [deleting,     setDeleting]     = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [deleting, setDeleting] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
-  const [decisionNote,  setDecisionNote]  = useState('');
-  const [actionError,   setActionError]   = useState('');
-  const [successMsg,    setSuccessMsg]    = useState('');
+  const [decisionNote, setDecisionNote] = useState('');
+  const [actionError, setActionError] = useState('');
+  const [successMsg, setSuccessMsg] = useState('');
 
   const fetchBidder = useCallback(async () => {
     setLoading(true);
@@ -120,9 +120,24 @@ const BidderView = () => {
     }
   };
 
-  // Approve / Reject
+  // Generate Recommendation
+  const handleRecommend = async () => {
+    setActionError('');
+    setRecommending(true);
+    try {
+      const r = await api.post(`/bidders/${id}/recommend`);
+      setBidder(prev => ({ ...prev, recommendation: r.data.recommendation }));
+      flash('AI recommendation generated successfully.');
+    } catch (err) {
+      setActionError(err.response?.data?.error || 'Recommendation generation failed.');
+    } finally {
+      setRecommending(false);
+    }
+  };
+
+  // Approve / Reject / Flag / Overturn
   const submitDecision = async (action) => {
-    if (!decisionNote.trim()) {
+    if (action !== 'overturn' && !decisionNote.trim()) {
       setActionError('A decision note / justification is required.');
       return;
     }
@@ -134,7 +149,14 @@ const BidderView = () => {
       setDecisionNote('');
       // Refresh audit logs
       await fetchBidder();
-      flash(`Bidder ${action}d successfully.`);
+
+      let actionLabel = action;
+      if (action === 'approve') actionLabel = 'approved';
+      if (action === 'reject') actionLabel = 'rejected';
+      if (action === 'flag_review') actionLabel = 'flagged for review';
+      if (action === 'overturn') actionLabel = 'overturned';
+
+      flash(`Bidder decision '${actionLabel}' submitted successfully.`);
     } catch (err) {
       setActionError(err.response?.data?.error || 'Decision submission failed. Please log out and log back in.');
     } finally {
@@ -158,7 +180,7 @@ const BidderView = () => {
   // Download PDF
   const downloadPDF = () => {
     const token = localStorage.getItem('praman_token');
-    const url = `http://localhost:8081/api/bidders/${id}/report`;
+    const url = `http://localhost:4000/api/bidders/${id}/report`;
     const a = document.createElement('a');
     a.href = url;
     a.target = '_blank';
@@ -194,7 +216,7 @@ const BidderView = () => {
   }
 
   const isVerified = bidder.checks && bidder.checks.length > 0;
-  const hasRec     = !!bidder.recommendation;
+  const hasRec = !!bidder.recommendation;
 
   return (
     <div>
@@ -305,9 +327,11 @@ const BidderView = () => {
                     <div className="flex-1">
                       <div className="flex items-center gap-2 mb-1" style={{ flexWrap: 'wrap' }}>
                         <span className="font-bold text-sm uppercase" style={{ color: 'var(--navy-dark)' }}>{check.label}</span>
-                        <span style={{ fontSize: '9px', fontWeight: 700, padding: '1px 5px', border: '1px solid', borderRadius: '2px',
+                        <span style={{
+                          fontSize: '9px', fontWeight: 700, padding: '1px 5px', border: '1px solid', borderRadius: '2px',
                           color: check.live ? 'var(--status-approved)' : 'var(--navy-dark)',
-                          borderColor: check.live ? 'var(--status-approved)' : 'var(--navy-dark)' }}>
+                          borderColor: check.live ? 'var(--status-approved)' : 'var(--navy-dark)'
+                        }}>
                           {check.live ? 'LIVE API' : 'SIMULATED'}
                         </span>
                         <span className="text-xs text-muted font-bold">Weight: {check.weight}pts</span>
@@ -350,8 +374,8 @@ const BidderView = () => {
                 <div className="text-center text-muted font-bold uppercase text-sm p-6">No audit entries.</div>
               ) : bidder.auditLogs.map((log, idx) => {
                 const isDecision = log.action?.toLowerCase().includes('approved') || log.action?.toLowerCase().includes('rejected');
-                const isVerify   = log.action?.toLowerCase().includes('verification run');
-                const isAI       = log.action?.toLowerCase().includes('ollama') || log.action?.toLowerCase().includes('recommendation');
+                const isVerify = log.action?.toLowerCase().includes('verification run');
+                const isAI = log.action?.toLowerCase().includes('ollama') || log.action?.toLowerCase().includes('recommendation');
 
                 return (
                   <div key={log.id} className="p-4"
@@ -435,65 +459,114 @@ const BidderView = () => {
                   {bidder.recommendation}
                 </div>
               )}
-
-              {/* Button removed as recommendation is now generated automatically */}
             </div>
           </div>
 
-          {/* Officer Decision */}
-          <div className="card">
-            <div className="card-header" style={{ backgroundColor: 'var(--navy-dark)' }}>
-              <div className="font-bold uppercase text-sm" style={{ color: 'white' }}>⚖ OFFICER DECISION</div>
+            {/* Officer Decision */}
+            <div className="card">
+              <div className="card-header" style={{ backgroundColor: 'var(--navy-dark)' }}>
+                <div className="font-bold uppercase text-sm" style={{ color: 'white' }}>⚖ OFFICER DECISION</div>
+              </div>
+              <div className="card-body">
+                <div className="flex justify-between items-center mb-4">
+                  <span className="font-bold uppercase text-xs text-muted">Current Status</span>
+                  <Badge variant={bidder.status}>{bidder.status.replace(/_/g, ' ')}</Badge>
+                </div>
+
+                <div className="callout mb-4 text-xs font-bold uppercase"
+                  style={{ borderLeftColor: 'var(--status-pending)', backgroundColor: '#FFFBEB', color: 'var(--navy-dark)' }}>
+                  The final decision to approve or reject this bidder rests solely with the officer. The AI recommendation is advisory only.
+                </div>
+
+                <div className="mb-3">
+                  <label className="text-xs font-bold mb-1 block uppercase text-muted">
+                    Officer Justification Note <span style={{ color: 'var(--status-rejected)' }}>*</span>
+                  </label>
+                  <textarea
+                    className="input" rows="3"
+                    placeholder={
+                      bidder.status === 'approved' || bidder.status === 'rejected'
+                        ? "Decision finalized. Click Overturn Decision to select another option."
+                        : "Enter your justification for this decision. This will be permanently recorded in the audit log..."
+                    }
+                    value={decisionNote}
+                    onChange={e => setDecisionNote(e.target.value)}
+                    disabled={submitting || bidder.status === 'approved' || bidder.status === 'rejected'}
+                    style={{ resize: 'vertical' }}
+                  />
+                </div>
+
+                <div className="flex flex-col gap-2">
+                  {/* Initial State / Overturned State: pending_review */}
+                  {bidder.status === 'pending_review' && (
+                    <>
+                      <button
+                        onClick={() => submitDecision('approve')}
+                        disabled={submitting}
+                        className="btn w-full"
+                        style={{ backgroundColor: 'var(--status-approved)', color: 'white', border: 'none', gap: '0.5rem' }}>
+                        {submitting ? <span className="spinner" style={{ width: 14, height: 14, borderWidth: 2 }}></span> : <Check size={15} />}
+                        APPROVE BIDDER
+                      </button>
+                      <button
+                        onClick={() => submitDecision('reject')}
+                        disabled={submitting}
+                        className="btn btn-outline w-full"
+                        style={{ color: 'var(--status-rejected)', borderColor: 'var(--status-rejected)', gap: '0.5rem' }}>
+                        {submitting ? <span className="spinner" style={{ width: 14, height: 14, borderWidth: 2 }}></span> : <X size={15} />}
+                        REJECT BIDDER
+                      </button>
+                      <button
+                        onClick={() => submitDecision('flag_review')}
+                        disabled={submitting}
+                        className="btn btn-outline w-full"
+                        style={{ color: 'var(--status-pending)', borderColor: 'var(--status-pending)', gap: '0.5rem' }}>
+                        {submitting ? <span className="spinner" style={{ width: 14, height: 14, borderWidth: 2 }}></span> : <Flag size={15} />}
+                        FLAG FOR REVIEW
+                      </button>
+                    </>
+                  )}
+
+                  {/* Flagged State: flagged_for_review */}
+                  {bidder.status === 'flagged_for_review' && (
+                    <>
+                      <button
+                        onClick={() => submitDecision('approve')}
+                        disabled={submitting}
+                        className="btn w-full"
+                        style={{ backgroundColor: 'var(--status-approved)', color: 'white', border: 'none', gap: '0.5rem' }}>
+                        {submitting ? <span className="spinner" style={{ width: 14, height: 14, borderWidth: 2 }}></span> : <Check size={15} />}
+                        APPROVE BIDDER
+                      </button>
+                      <button
+                        onClick={() => submitDecision('reject')}
+                        disabled={submitting}
+                        className="btn btn-outline w-full"
+                        style={{ color: 'var(--status-rejected)', borderColor: 'var(--status-rejected)', gap: '0.5rem' }}>
+                        {submitting ? <span className="spinner" style={{ width: 14, height: 14, borderWidth: 2 }}></span> : <X size={15} />}
+                        REJECT BIDDER
+                      </button>
+                    </>
+                  )}
+
+                  {/* Decided States: approved or rejected */}
+                  {(bidder.status === 'approved' || bidder.status === 'rejected') && (
+                    <button
+                      onClick={() => submitDecision('overturn')}
+                      disabled={submitting}
+                      className="btn btn-outline w-full"
+                      style={{ color: 'var(--navy-dark)', borderColor: 'var(--navy-dark)', gap: '0.5rem' }}>
+                      {submitting ? <span className="spinner" style={{ width: 14, height: 14, borderWidth: 2 }}></span> : <RefreshCw size={15} />}
+                      OVERTURN DECISION
+                    </button>
+                  )}
+                </div>
+              </div>
             </div>
-            <div className="card-body">
-              <div className="flex justify-between items-center mb-4">
-                <span className="font-bold uppercase text-xs text-muted">Current Status</span>
-                <Badge variant={bidder.status}>{bidder.status.replace(/_/g, ' ')}</Badge>
-              </div>
 
-              <div className="callout mb-4 text-xs font-bold uppercase"
-                style={{ borderLeftColor: 'var(--status-pending)', backgroundColor: '#FFFBEB', color: 'var(--navy-dark)' }}>
-                The final decision to approve or reject this bidder rests solely with the officer. The AI recommendation is advisory only.
-              </div>
-
-              <div className="mb-3">
-                <label className="text-xs font-bold mb-1 block uppercase text-muted">
-                  Officer Justification Note <span style={{ color: 'var(--status-rejected)' }}>*</span>
-                </label>
-                <textarea
-                  className="input" rows="3"
-                  placeholder="Enter your justification for this decision. This will be permanently recorded in the audit log..."
-                  value={decisionNote}
-                  onChange={e => setDecisionNote(e.target.value)}
-                  disabled={submitting}
-                  style={{ resize: 'vertical' }}
-                />
-              </div>
-
-              <div className="flex flex-col gap-2">
-                <button
-                  onClick={() => submitDecision('approve')}
-                  disabled={submitting}
-                  className="btn w-full"
-                  style={{ backgroundColor: 'var(--status-approved)', color: 'white', border: 'none', gap: '0.5rem' }}>
-                  {submitting ? <span className="spinner" style={{ width: 14, height: 14, borderWidth: 2 }}></span> : <Check size={15} />}
-                  APPROVE BIDDER
-                </button>
-                <button
-                  onClick={() => submitDecision('reject')}
-                  disabled={submitting}
-                  className="btn btn-outline w-full"
-                  style={{ color: 'var(--status-rejected)', borderColor: 'var(--status-rejected)', gap: '0.5rem' }}>
-                  {submitting ? <span className="spinner" style={{ width: 14, height: 14, borderWidth: 2 }}></span> : <X size={15} />}
-                  REJECT BIDDER
-                </button>
-              </div>
-            </div>
           </div>
-
         </div>
       </div>
-    </div>
   );
 };
 

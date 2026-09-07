@@ -37,7 +37,7 @@ const AuditTrail = () => {
 
   const handleExport = () => {
     const token = localStorage.getItem('praman_token');
-    const url = `http://localhost:8081/api/audit/export`;
+    const url = `http://localhost:4000/api/audit/export`;
     const a = document.createElement('a');
     fetch(url, { headers: { Authorization: `Bearer ${token}` } })
       .then(r => r.blob())

@@ -1,9 +1,9 @@
 import axios from 'axios';
 
 // Create an Axios instance
-// Note: In development via Docker, host browser accesses backend via localhost:8081
+// Note: In development via Docker, host browser accesses backend via localhost:4000
 const api = axios.create({
-  baseURL: 'http://localhost:8081/api',
+  baseURL: 'http://localhost:4000/api',
   timeout: 120000, // 2 minutes timeout for Ollama operations
 });
 

@@ -15,6 +15,7 @@ const Badge = ({ children, variant = 'default', size = 'md' }) => {
     case 'warning':
     case 'warn':
     case 'pending_review':
+    case 'flagged_for_review':
     case 'under_review':
     case 'medium':
       bg = 'var(--status-pending)';

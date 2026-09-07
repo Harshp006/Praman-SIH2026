@@ -6,16 +6,16 @@
 
 const { z } = require("zod");
 
-// POST /api/bidders/:id/decision — spec only allows approve or reject
+// POST /api/bidders/:id/decision
 const DecisionSchema = z.object({
-  action: z.enum(["approve", "reject"], {
-    errorMap: () => ({ message: "action must be 'approve' or 'reject'" }),
+  action: z.enum(["approve", "reject", "flag_review", "overturn"], {
+    errorMap: () => ({ message: "action must be 'approve', 'reject', 'flag_review', or 'overturn'" }),
   }),
 });
 
 // Query params for GET /api/bidders
 const BidderListQuerySchema = z.object({
-  status: z.enum(["approved", "rejected", "pending_review"]).optional(),
+  status: z.enum(["approved", "rejected", "pending_review", "flagged_for_review"]).optional(),
   risk:   z.enum(["low", "medium", "high"]).optional(),
   q:      z.string().max(100).optional(),
 });
