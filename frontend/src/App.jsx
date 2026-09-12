@@ -31,14 +31,14 @@ const ProtectedLayout = () => {
       </main>
       
       {/* Global Footer */}
-      <footer style={{ 
-        backgroundColor: '#E2E8F0', 
-        borderTop: '1px solid var(--border)',
+      <footer style={{
+        background: 'linear-gradient(135deg, #1E3A5F 0%, #1D4ED8 100%)',
+        borderTop: '3px solid #F59E0B',
         padding: '1rem 0'
       }}>
-        <div className="container flex justify-between items-center text-xs font-bold uppercase text-muted">
-          <span>Praman — Bid Compliance Verification System | v1.0</span>
-          <span>Best viewed in Chrome / Firefox | Internal use only — CPCL Procurement Division</span>
+        <div className="container flex justify-between items-center" style={{ color: 'rgba(255,255,255,0.7)', fontSize: '0.72rem', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+          <span>Praman — GeM Bid Compliance Verification | SIH 2026</span>
+          <span>Problem Statement #26100 | Internal Use Only</span>
         </div>
       </footer>
     </div>

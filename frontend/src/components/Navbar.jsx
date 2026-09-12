@@ -1,5 +1,5 @@
 import React from 'react';
-import { ShieldCheck, LogOut, Bell, User, LayoutDashboard, PlusCircle, Shield } from 'lucide-react';
+import { ShieldCheck, LogOut, Bell, User, LayoutDashboard, PlusCircle, Shield, FileText } from 'lucide-react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 
 const Navbar = ({ officer, onLogout }) => {
@@ -12,73 +12,91 @@ const Navbar = ({ officer, onLogout }) => {
   };
 
   const now = new Date();
-  const dateOptions = { day: '2-digit', month: 'short', year: 'numeric' };
-  const timeOptions = { hour: '2-digit', minute: '2-digit', hour12: true };
-  const formattedDateTime = `${now.toLocaleDateString('en-GB', dateOptions)} | ${now.toLocaleTimeString('en-US', timeOptions).toLowerCase()}`;
+  const formattedDateTime = now.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })
+    + ' | ' + now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true }).toLowerCase();
 
   const navLinks = [
-    { path: '/', label: 'Dashboard', icon: LayoutDashboard },
-    { path: '/add-bidder', label: 'Add Bidder', icon: PlusCircle },
+    { path: '/',            label: 'Dashboard',  icon: LayoutDashboard },
+    { path: '/add-bidder',  label: 'Add Bidder', icon: PlusCircle },
     { path: '/audit-trail', label: 'Audit Trail', icon: Shield },
   ];
 
   return (
-    <div style={{ position: 'sticky', top: 0, zIndex: 50 }}>
+    <div style={{ position: 'sticky', top: 0, zIndex: 50, boxShadow: '0 2px 12px rgba(37,99,235,0.12)' }}>
       {/* Top Header Bar */}
-      <header style={{ backgroundColor: 'var(--navy-dark)', color: 'white' }}>
-        <div className="container flex items-center justify-between" style={{ height: '64px' }}>
-          {/* Left */}
+      <header style={{
+        background: 'linear-gradient(135deg, #1E3A5F 0%, #2563EB 100%)',
+        color: 'white'
+      }}>
+        <div className="container flex items-center justify-between" style={{ height: '60px' }}>
+          {/* Left: Logo */}
           <div className="flex items-center gap-3">
-            <ShieldCheck size={28} strokeWidth={2.5} />
-            <span className="font-bold text-lg tracking-wide uppercase">Praman</span>
-            <span style={{ 
-              backgroundColor: 'var(--gold)', 
-              color: 'var(--navy-darker)',
-              padding: '2px 6px',
-              fontSize: '10px',
-              fontWeight: 800,
-              borderRadius: '2px'
-            }}>V1</span>
-          </div>
-          
-          {/* Right */}
-          <div className="flex items-center gap-6 text-sm">
-            <span style={{ color: '#C7D0DA' }}>{formattedDateTime}</span>
-            
-            <div className="flex items-center gap-1 cursor-not-allowed text-muted" title="No unread notifications">
-              <Bell size={18} />
+            <div style={{
+              background: 'rgba(255,255,255,0.15)',
+              borderRadius: '8px',
+              padding: '6px',
+              display: 'flex', alignItems: 'center', justifyContent: 'center'
+            }}>
+              <ShieldCheck size={22} strokeWidth={2.5} />
             </div>
+            <div>
+              <div style={{ fontWeight: 800, fontSize: '1.1rem', letterSpacing: '-0.02em', lineHeight: 1 }}>
+                Praman
+              </div>
+              <div style={{ fontSize: '9px', fontWeight: 600, color: 'rgba(255,255,255,0.65)', letterSpacing: '0.08em', textTransform: 'uppercase' }}>
+                GeM Bid Compliance Platform
+              </div>
+            </div>
+            <span style={{
+              background: '#F59E0B',
+              color: '#1E3A5F',
+              padding: '2px 7px',
+              fontSize: '9px',
+              fontWeight: 800,
+              borderRadius: '4px',
+              letterSpacing: '0.05em'
+            }}>SIH 2026</span>
+          </div>
 
-            <div className="flex items-center gap-2">
-              <User size={18} />
-              <span className="font-semibold">{officer.name}</span>
-              <span style={{
-                backgroundColor: 'rgba(255,255,255,0.15)',
-                padding: '2px 6px',
-                fontSize: '10px',
-                fontWeight: 700,
-                borderRadius: '2px',
-                marginLeft: '4px'
-              }}>OFFICER</span>
+          {/* Right */}
+          <div className="flex items-center gap-4 text-sm">
+            <span style={{ color: 'rgba(255,255,255,0.65)', fontSize: '0.75rem' }}>{formattedDateTime}</span>
+            
+            <div className="flex items-center gap-2" style={{ 
+              background: 'rgba(255,255,255,0.12)', 
+              borderRadius: '6px',
+              padding: '4px 10px'
+            }}>
+              <div style={{ 
+                width: 28, height: 28, borderRadius: '50%', 
+                background: 'rgba(255,255,255,0.2)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center'
+              }}>
+                <User size={14} />
+              </div>
+              <div>
+                <div style={{ fontWeight: 700, fontSize: '0.8rem', lineHeight: 1 }}>{officer.name}</div>
+                <div style={{ fontSize: '9px', color: 'rgba(255,255,255,0.65)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Procurement Officer</div>
+              </div>
             </div>
             
             <button 
               onClick={handleLogout}
-              className="btn btn-outline-white text-xs" 
-              style={{ padding: '4px 10px' }}
+              className="btn btn-outline-white"
+              style={{ padding: '5px 12px', fontSize: '0.72rem' }}
             >
-              <LogOut size={14} /> LOGOUT
+              <LogOut size={13} /> Logout
             </button>
           </div>
         </div>
       </header>
 
-      {/* Gold Strip */}
-      <div style={{ height: '4px', backgroundColor: 'var(--gold)', width: '100%' }}></div>
+      {/* Accent Strip */}
+      <div style={{ height: '3px', background: 'linear-gradient(90deg, #F59E0B 0%, #FCD34D 100%)' }}></div>
 
       {/* Nav Tabs */}
-      <div style={{ backgroundColor: 'var(--navy-darker)', borderBottom: '1px solid var(--border)' }}>
-        <div className="container flex items-center gap-6">
+      <div style={{ backgroundColor: '#1D4ED8', borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
+        <div className="container flex items-center gap-1">
           {navLinks.map(link => {
             const isActive = location.pathname === link.path || (link.path !== '/' && location.pathname.startsWith(link.path));
             const Icon = link.icon;
@@ -86,16 +104,22 @@ const Navbar = ({ officer, onLogout }) => {
               <Link 
                 key={link.path}
                 to={link.path} 
-                className="flex items-center gap-2 font-semibold uppercase text-sm"
+                className="flex items-center gap-2"
                 style={{
-                  padding: '12px 0',
-                  color: isActive ? 'var(--gold)' : '#A0AAB5',
-                  borderBottom: isActive ? '3px solid var(--gold)' : '3px solid transparent',
+                  padding: '10px 16px',
+                  fontSize: '0.78rem',
+                  fontWeight: 700,
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.05em',
+                  color: isActive ? 'white' : 'rgba(255,255,255,0.6)',
+                  borderBottom: isActive ? '3px solid #F59E0B' : '3px solid transparent',
+                  borderRadius: '0',
                   transition: 'color 0.2s',
-                  textDecoration: 'none'
+                  textDecoration: 'none',
+                  background: isActive ? 'rgba(255,255,255,0.08)' : 'transparent',
                 }}
               >
-                <Icon size={16} /> {link.label}
+                <Icon size={14} /> {link.label}
               </Link>
             );
           })}

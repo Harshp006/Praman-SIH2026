@@ -38,6 +38,11 @@ model Bidder {
   createdAt      DateTime  @default(now())
   updatedAt      DateTime  @updatedAt
 
+  // Blockchain audit fields
+  blockchainTxId       String?
+  blockchainHash       String?
+  blockchainRecordedAt DateTime?
+
   createdBy Officer    @relation(fields: [createdById], references: [id])
   tender    Tender     @relation(fields: [tenderId], references: [tenderId])
   documents Document[]

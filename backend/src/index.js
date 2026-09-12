@@ -19,6 +19,8 @@ const authRoutes   = require("./routes/auth");
 const bidderRoutes = require("./routes/bidders");
 const dashRoutes   = require("./routes/dashboard");
 const tenderRoutes = require("./routes/tenders");
+const gemRoutes    = require("./routes/gem");
+const blockchainRoutes = require("./routes/blockchain");
 const { isOllamaReady } = require("./engines/ollama");
 
 const { PrismaClient } = require("@prisma/client");
@@ -29,11 +31,11 @@ const prisma = new PrismaClient();
 const app = express();
 
 // Security + logging
-app.use(helmet());
+app.use(helmet({ crossOriginResourcePolicy: { policy: "cross-origin" } }));
 app.use(cors({
   origin: "*", // frontend on different port in dev
   methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
-  allowedHeaders: ["Content-Type", "Authorization"],
+  allowedHeaders: ["Content-Type", "Authorization", "X-API-Key"],
 }));
 app.use(morgan(config.NODE_ENV === "production" ? "combined" : "dev"));
 app.use(express.json({ limit: "1mb" }));
@@ -49,6 +51,9 @@ app.use("/api/auth",      authRoutes);   // backward-compat prefix for existing 
 app.use("/api/bidders",   bidderRoutes);
 app.use("/api/tenders",   tenderRoutes);
 app.use("/api/dashboard", dashRoutes);
+app.use("/api/v1/gem",    gemRoutes);
+app.use("/api/blockchain", blockchainRoutes);
+
 
 /**
  * GET /api/audit — Global audit trail (paginated)

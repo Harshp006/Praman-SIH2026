@@ -14,10 +14,14 @@ module.exports = {
   JWT_SECRET:      process.env.JWT_SECRET      || "praman_jwt_dev_secret_CHANGE_IN_PROD",
   JWT_EXPIRES_IN:  process.env.JWT_EXPIRES_IN  || "8h",
 
-  // Ollama — spec requires 8 s timeout; fallback fires automatically on expiry
-  OLLAMA_BASE_URL: process.env.OLLAMA_BASE_URL || "http://ollama:11434",
+  // Ollama — 10s timeout; fallback fires automatically on expiry
+  OLLAMA_BASE_URL: process.env.OLLAMA_BASE_URL || "http://localhost:11434",
   OLLAMA_MODEL:    process.env.OLLAMA_MODEL    || "llama3.2:3b",
-  OLLAMA_TIMEOUT:  60_000, // Increased to 60s for hackathon demo to ensure LLM has enough time to respond
+  OLLAMA_TIMEOUT:  10_000, // 10s timeout for crisp UX with instant fallback
+
+  // GeM Integration
+  GEM_API_KEY:     process.env.GEM_API_KEY,
+  GEM_WEBHOOK_URL: process.env.GEM_WEBHOOK_URL,
 
   // Uploads directory (absolute inside container; relative on host dev)
   UPLOADS_DIR: process.env.UPLOADS_DIR || "/uploads",

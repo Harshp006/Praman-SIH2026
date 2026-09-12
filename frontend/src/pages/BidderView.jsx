@@ -3,7 +3,8 @@ import { useParams, useNavigate, Link } from 'react-router-dom';
 import {
   ArrowLeft, RefreshCw, FileText, Check, X, Flag,
   Building2, Brain, Edit, Trash2, Download,
-  Wifi, WifiOff, AlertCircle, Clock, CheckCircle2
+  Wifi, WifiOff, AlertCircle, Clock, CheckCircle2,
+  Shield, ShieldCheck, ShieldAlert
 } from 'lucide-react';
 import api from '../api';
 import Badge from '../components/Badge';
@@ -89,6 +90,12 @@ const BidderView = () => {
   const [actionError,   setActionError]   = useState('');
   const [successMsg,    setSuccessMsg]    = useState('');
 
+  // Blockchain States
+  const [bcRegistering, setBcRegistering] = useState(false);
+  const [bcVerifying,   setBcVerifying]   = useState(false);
+  const [bcTampering,   setBcTampering]   = useState(false);
+  const [bcResult,      setBcResult]      = useState(null);
+
   const fetchBidder = useCallback(async () => {
     setLoading(true);
     try {
@@ -142,6 +149,55 @@ const BidderView = () => {
     }
   };
 
+  // ─── Blockchain Functions ─────────────────────────────────────────────────────
+
+  const handleRegisterBlockchain = async () => {
+    setActionError('');
+    setBcRegistering(true);
+    try {
+      await api.post(`/blockchain/record/${id}`);
+      flash('Verification record successfully registered on the blockchain.');
+      await fetchBidder();
+    } catch (err) {
+      setActionError(err.response?.data?.error || 'Blockchain registration failed.');
+    } finally {
+      setBcRegistering(false);
+    }
+  };
+
+  const handleVerifyIntegrity = async () => {
+    setActionError('');
+    setBcResult(null);
+    setBcVerifying(true);
+    try {
+      const r = await api.get(`/blockchain/verify/${id}`);
+      setBcResult(r.data);
+      if (r.data.verified) {
+        flash('Blockchain integrity verified: Record is untampered.');
+      }
+    } catch (err) {
+      setActionError(err.response?.data?.error || 'Blockchain verification failed.');
+    } finally {
+      setBcVerifying(false);
+    }
+  };
+
+  const handleTamperDemo = async () => {
+    if (!window.confirm("This will maliciously alter the database score to simulate tampering. Proceed?")) return;
+    setActionError('');
+    setBcTampering(true);
+    try {
+      await api.post(`/blockchain/tamper/${id}`);
+      flash('Demo: Record tampered. Now click "Verify Integrity" to detect it.');
+      setBcResult(null);
+      await fetchBidder();
+    } catch (err) {
+      setActionError(err.response?.data?.error || 'Tamper demo failed.');
+    } finally {
+      setBcTampering(false);
+    }
+  };
+
   // Delete
   const handleDelete = async () => {
     setDeleting(true);
@@ -156,23 +212,24 @@ const BidderView = () => {
   };
 
   // Download PDF
-  const downloadPDF = () => {
-    const token = localStorage.getItem('praman_token');
-    const url = `http://localhost:8081/api/bidders/${id}/report`;
-    const a = document.createElement('a');
-    a.href = url;
-    a.target = '_blank';
-    // Use fetch with auth header
-    fetch(url, { headers: { Authorization: `Bearer ${token}` } })
-      .then(r => r.blob())
-      .then(blob => {
-        const blobUrl = URL.createObjectURL(blob);
-        a.href = blobUrl;
-        a.download = `Praman_Report_${bidder?.name || id}.pdf`;
-        a.click();
-        URL.revokeObjectURL(blobUrl);
-      })
-      .catch(() => setActionError('PDF generation failed.'));
+  const downloadPDF = async () => {
+    setActionError('');
+    try {
+      const res = await api.get(`/bidders/${id}/report`, { responseType: 'blob' });
+      const blob = new Blob([res.data], { type: 'application/pdf' });
+      const blobUrl = URL.createObjectURL(blob);
+      const safeName = (bidder?.name || id).replace(/[^a-zA-Z0-9]/g, '_');
+      const a = document.createElement('a');
+      a.href = blobUrl;
+      a.download = `Praman_Report_${safeName}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(blobUrl);
+    } catch (err) {
+      console.error('PDF generation error:', err);
+      setActionError(err.response?.data?.error || err.message || 'PDF generation failed. Please try again.');
+    }
   };
 
   if (loading) {
@@ -294,28 +351,57 @@ const BidderView = () => {
             )}
 
             {isVerified && !verifying && (
-              <div style={{ border: '1px solid var(--border)', borderTop: 'none', backgroundColor: 'var(--surface)' }}>
-                {bidder.checks.map((check, idx) => (
-                  <div key={check.id} className="flex gap-3 p-4"
-                    style={{
-                      borderBottom: idx !== bidder.checks.length - 1 ? '1px solid var(--border)' : 'none',
-                      backgroundColor: check.state === 'fail' ? '#FFF5F5' : check.state === 'warn' ? '#FFFDF0' : 'transparent',
-                    }}>
-                    <CheckIcon state={check.state} />
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-1" style={{ flexWrap: 'wrap' }}>
-                        <span className="font-bold text-sm uppercase" style={{ color: 'var(--navy-dark)' }}>{check.label}</span>
-                        <span style={{ fontSize: '9px', fontWeight: 700, padding: '1px 5px', border: '1px solid', borderRadius: '2px',
-                          color: check.live ? 'var(--status-approved)' : 'var(--navy-dark)',
-                          borderColor: check.live ? 'var(--status-approved)' : 'var(--navy-dark)' }}>
-                          {check.live ? 'LIVE API' : 'SIMULATED'}
-                        </span>
-                        <span className="text-xs text-muted font-bold">Weight: {check.weight}pts</span>
+              <div style={{ border: '1px solid var(--border)', borderTop: 'none', backgroundColor: 'var(--surface)', borderRadius: '0 0 var(--radius) var(--radius)' }}>
+                {bidder.checks.map((check, idx) => {
+                  // Map each check label to its source portal
+                  const portalMap = {
+                    'GST registration & return filing': 'GSTN Portal',
+                    'PAN & Income Tax compliance': 'IT / PAN Portal',
+                    'Udyam / MSME registration': 'Udyam Portal',
+                    'Blacklisting / debarment': 'CVC Portal',
+                    'Tender-specific eligibility clause': 'GeM Portal',
+                    'MCA21 company status': 'MCA21 Portal',
+                    'EPFO / ESIC compliance': 'EPFO / ESIC',
+                    'Make in India / local content': 'DPIIT / MII',
+                    'Startup India / NSIC / OEM authorization': 'Startup India',
+                    'DigiLocker document verification': 'DigiLocker',
+                    'BIS / DPIIT certification': 'BIS / DPIIT',
+                  };
+                  const portal = portalMap[check.label] || 'Portal';
+                  const rowBg = check.state === 'fail' ? '#FFF5F5' : check.state === 'warn' ? '#FFFBEB' : 'transparent';
+
+                  return (
+                    <div key={check.id} className="flex gap-3"
+                      style={{
+                        padding: '0.875rem 1rem',
+                        borderBottom: idx !== bidder.checks.length - 1 ? '1px solid var(--border)' : 'none',
+                        backgroundColor: rowBg,
+                        borderLeft: `3px solid ${
+                          check.state === 'pass' ? 'var(--status-approved)' :
+                          check.state === 'fail' ? 'var(--status-rejected)' :
+                          check.state === 'warn' ? 'var(--status-pending)' : '#CBD5E1'
+                        }`,
+                      }}>
+                      <CheckIcon state={check.state} />
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-1" style={{ flexWrap: 'wrap' }}>
+                          <span className="font-bold text-sm uppercase" style={{ color: 'var(--navy-deep)' }}>{check.label}</span>
+                          <span className="badge-portal">{portal}</span>
+                          <span style={{
+                            fontSize: '9px', fontWeight: 700, padding: '1px 6px', borderRadius: '999px',
+                            background: check.live ? '#DCFCE7' : '#F1F5F9',
+                            color: check.live ? '#16A34A' : '#64748B',
+                            border: `1px solid ${check.live ? '#86EFAC' : '#CBD5E1'}`
+                          }}>
+                            {check.live ? '● LIVE API' : '○ SIMULATED'}
+                          </span>
+                          <span className="text-xs text-muted font-bold">Wt: {check.weight}pts</span>
+                        </div>
+                        <p className="text-sm text-muted m-0 leading-relaxed">{check.note}</p>
                       </div>
-                      <p className="text-sm text-muted m-0 leading-relaxed">{check.note}</p>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             )}
           </div>
@@ -490,6 +576,81 @@ const BidderView = () => {
               </div>
             </div>
           </div>
+
+          {/* Blockchain Audit */}
+          {isVerified && (
+            <div className="card">
+              <div className="card-header flex justify-between items-center" style={{ backgroundColor: '#1A1F27' }}>
+                <div className="flex items-center gap-2 font-bold uppercase text-sm" style={{ color: 'white' }}>
+                  <Shield size={16} /> BLOCKCHAIN AUDIT
+                </div>
+              </div>
+              <div className="card-body">
+                {!bidder.blockchainTxId ? (
+                  <div className="text-center">
+                    <div className="text-xs text-muted mb-3 font-bold uppercase">Not registered on blockchain</div>
+                    <button
+                      onClick={handleRegisterBlockchain}
+                      disabled={bcRegistering}
+                      className="btn w-full"
+                      style={{ backgroundColor: 'var(--navy-dark)', color: 'white', gap: '0.4rem' }}>
+                      {bcRegistering ? <span className="spinner" style={{ width: 14, height: 14, borderWidth: 2 }}></span> : <ShieldCheck size={14} />}
+                      REGISTER ON BLOCKCHAIN
+                    </button>
+                    <div className="text-xs text-muted mt-2">Creates a tamper-evident hash of this verification on Fabric.</div>
+                  </div>
+                ) : (
+                  <div>
+                    <div className="mb-3">
+                      <div className="text-xs font-bold uppercase text-muted">Transaction ID</div>
+                      <div className="text-xs" style={{ fontFamily: 'monospace', wordBreak: 'break-all' }}>{bidder.blockchainTxId}</div>
+                    </div>
+                    
+                    <div className="flex gap-2">
+                      <button
+                        onClick={handleVerifyIntegrity}
+                        disabled={bcVerifying}
+                        className="btn flex-1"
+                        style={{ backgroundColor: 'var(--navy-dark)', color: 'white', gap: '0.4rem', padding: '0.5rem' }}>
+                        {bcVerifying ? <span className="spinner" style={{ width: 14, height: 14, borderWidth: 2 }}></span> : <ShieldCheck size={14} />}
+                        VERIFY INTEGRITY
+                      </button>
+                      <button
+                        onClick={handleTamperDemo}
+                        disabled={bcTampering}
+                        className="btn btn-outline"
+                        style={{ borderColor: 'var(--status-rejected)', color: 'var(--status-rejected)', padding: '0.5rem' }}
+                        title="Simulate Tampering (Demo)">
+                        TAMPER TEST
+                      </button>
+                    </div>
+
+                    {bcResult && (
+                      <div className="callout mt-4 mb-0 flex items-start gap-2"
+                        style={{
+                          backgroundColor: bcResult.verified ? '#F0FFF4' : '#FDF2F2',
+                          borderLeftColor: bcResult.verified ? 'var(--status-approved)' : 'var(--status-rejected)',
+                        }}>
+                        {bcResult.verified ? (
+                          <ShieldCheck size={18} style={{ color: 'var(--status-approved)', marginTop: '2px' }} />
+                        ) : (
+                          <ShieldAlert size={18} style={{ color: 'var(--status-rejected)', marginTop: '2px' }} />
+                        )}
+                        <div>
+                          <div className="font-bold text-sm uppercase" style={{ color: bcResult.verified ? 'var(--status-approved)' : 'var(--status-rejected)' }}>
+                            {bcResult.verified ? 'Integrity Verified' : 'Tampering Detected'}
+                          </div>
+                          <div className="text-xs text-muted mt-1 leading-relaxed">
+                            {bcResult.message}
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
 
         </div>
       </div>

@@ -1,0 +1,156 @@
+openapi: 3.0.0
+info:
+  title: Praman GeM Integration API
+  description: Secure external-facing API for GeM to submit and verify bidders on the Praman platform.
+  version: "1.0.0"
+servers:
+  - url: http://localhost:4000/api/v1/gem
+    description: Local Development Server
+
+paths:
+  /health:
+    get:
+      summary: Health Check
+      description: Returns the health status of the GeM API endpoint. No authentication required.
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: "ok"
+                  timestamp:
+                    type: string
+                    format: date-time
+
+  /bidders:
+    post:
+      summary: Submit a Bidder
+      description: Submits bidder details and documents for compliance verification.
+      security:
+        - ApiKeyAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BidderPayload'
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BidderResponse'
+        '400':
+          description: Bad Request (Validation failed)
+        '401':
+          description: Unauthorized
+        '429':
+          description: Too Many Requests
+        '500':
+          description: Internal Server Error
+
+  /bidders/{id}/status:
+    get:
+      summary: Get Bidder Status
+      description: Retrieves the current verification status of a bidder submitted via this API.
+      security:
+        - ApiKeyAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BidderResponse'
+        '401':
+          description: Unauthorized
+        '404':
+          description: Not Found
+        '429':
+          description: Too Many Requests
+        '500':
+          description: Internal Server Error
+
+components:
+  securitySchemes:
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: X-API-Key
+
+  schemas:
+    BidderPayload:
+      type: object
+      required:
+        - name
+        - gstin
+        - pan
+        - udyam
+        - tenderId
+        - tenderName
+        - documents
+      properties:
+        name:
+          type: string
+          example: "Acme Corp"
+        gstin:
+          type: string
+          example: "07AAAAA0000A1Z5"
+        pan:
+          type: string
+          example: "AAAAA0000A"
+        udyam:
+          type: string
+          example: "UDYAM-MH-12-1234567"
+        tenderId:
+          type: string
+          example: "GEM/2026/B/12345"
+        tenderName:
+          type: string
+          example: "Supply of Laptops"
+        documents:
+          type: array
+          maxItems: 3
+          items:
+            type: object
+            required:
+              - type
+              - base64
+            properties:
+              type:
+                type: string
+                enum: [PAN, GST, UDYAM]
+              base64:
+                type: string
+                description: Base64 encoded file content (max 5MB decoded)
+
+    BidderResponse:
+      type: object
+      properties:
+        bidderId:
+          type: string
+          example: "clz1234560000w4y5x6z7890a"
+        status:
+          type: string
+          example: "pending_review"
+        score:
+          type: integer
+          example: 85
+        risk:
+          type: string
+          example: "low"
+        createdAt:
+          type: string
+          format: date-time

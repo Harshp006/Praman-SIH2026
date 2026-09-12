@@ -19,6 +19,7 @@ const checkDigiLocker       = require("./digilocker");
 const checkCVC              = require("./cvc");
 const checkMCA21            = require("./mca21");
 const checkTenderEligibility = require("./tenderEligibility");
+const checkBISDPIIT         = require("./bis_dpiit");
 
 /**
  * Ordered list matching CHECK_DEFS in seed.js (index = Check order).
@@ -36,6 +37,7 @@ const CONNECTORS = [
   { label: "Blacklisting / debarment",                 fn: checkCVC              },
   { label: "MCA21 company status",                     fn: checkMCA21            },
   { label: "Tender-specific eligibility clause",       fn: checkTenderEligibility },
+  { label: "BIS / DPIIT certification",                fn: checkBISDPIIT          },
 ];
 
 /**

@@ -2,54 +2,36 @@ import React from 'react';
 
 const Badge = ({ children, variant = 'default', size = 'md' }) => {
   let bg, color, border;
-  
+
   switch (variant) {
-    case 'success':
-    case 'pass':
-    case 'approved':
-    case 'low':
-      bg = 'var(--status-approved)';
-      color = '#fff';
-      border = 'transparent';
+    case 'success': case 'pass': case 'approved': case 'low':
+      bg = '#DCFCE7'; color = '#16A34A'; border = '#86EFAC';
       break;
-    case 'warning':
-    case 'warn':
-    case 'pending_review':
-    case 'under_review':
-    case 'medium':
-      bg = 'var(--status-pending)';
-      color = '#fff';
-      border = 'transparent';
+    case 'warning': case 'warn': case 'pending_review': case 'under_review': case 'medium':
+      bg = '#FEF3C7'; color = '#D97706'; border = '#FCD34D';
       break;
-    case 'danger':
-    case 'fail':
-    case 'rejected':
-    case 'high':
-      bg = 'var(--status-rejected)';
-      color = '#fff';
-      border = 'transparent';
+    case 'danger': case 'fail': case 'rejected': case 'high':
+      bg = '#FEE2E2'; color = '#DC2626'; border = '#FCA5A5';
       break;
-    case 'missing':
-    case 'na':
-    default:
-      bg = 'var(--surface-muted)';
-      color = 'var(--text-primary)';
-      border = 'var(--border)';
+    case 'missing': case 'na': default:
+      bg = '#F1F5F9'; color = '#64748B'; border = '#CBD5E1';
   }
 
-  const padding = size === 'sm' ? '2px 6px' : '4px 8px';
-  const fontSize = size === 'sm' ? '0.65rem' : '0.75rem';
+  const padding = size === 'sm' ? '2px 7px' : '3px 10px';
+  const fontSize = size === 'sm' ? '0.65rem' : '0.72rem';
 
   return (
-    <span 
-      className="badge" 
-      style={{ 
-        backgroundColor: bg, 
-        color, 
-        border: border !== 'transparent' ? `1px solid ${border}` : 'none',
+    <span
+      className="badge"
+      style={{
+        backgroundColor: bg,
+        color,
+        border: `1px solid ${border}`,
         padding,
         fontSize,
-        borderRadius: '2px'
+        borderRadius: '999px',
+        fontWeight: 700,
+        letterSpacing: '0.04em',
       }}
     >
       {children}
@@ -58,3 +40,4 @@ const Badge = ({ children, variant = 'default', size = 'md' }) => {
 };
 
 export default Badge;
+

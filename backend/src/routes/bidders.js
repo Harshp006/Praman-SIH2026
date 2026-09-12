@@ -20,6 +20,7 @@ const fs      = require("fs");
 const path    = require("path");
 const express = require("express");
 const multer  = require("multer");
+const axios   = require("axios");
 const { PrismaClient } = require("@prisma/client");
 
 const requireAuth  = require("../middleware/auth");
@@ -74,6 +75,7 @@ const CHECK_DEFS = [
   { label: "Make in India / local content",             category: "tender_specific", live: false, weight: 5 },
   { label: "Startup India / NSIC / OEM authorization", category: "tender_specific", live: false, weight: 2 },
   { label: "DigiLocker document verification",          category: "statutory",       live: false, weight: 2 },
+  { label: "BIS / DPIIT certification",                 category: "statutory",       live: false, weight: 3 },
 ];
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -521,6 +523,18 @@ router.post("/:id/decision", requireAuth, async (req, res, next) => {
       }
     }
 
+    // OUTBOUND WEBHOOK
+    if (config.GEM_WEBHOOK_URL) {
+      // non-blocking webhook call
+      axios.post(config.GEM_WEBHOOK_URL, {
+        bidderId: bidder.id,
+        decision: action,
+        timestamp: new Date().toISOString()
+      }, { timeout: 5000 }).catch(err => {
+        console.warn(`[GeM Webhook] Failed to notify GeM for bidder ${bidder.id}: ${err.message}`);
+      });
+    }
+
     res.json({ message: `Bid ${action}d successfully.`, id: bidder.id, status: newStatus });
   } catch (err) { next(err); }
 });
@@ -596,8 +610,10 @@ router.get("/:id/report", requireAuth, async (req, res, next) => {
       ["Udyam Number",  bidder.udyam],
       ["Tender ID",     bidder.tenderId],
       ["Tender Name",   bidder.tenderName],
-      ["Status",        bidder.status.replace("_"," ").toUpperCase()],
+      ["Status",        (bidder.status || "pending").replace("_"," ").toUpperCase()],
       ["Registered On", new Date(bidder.createdAt).toLocaleDateString("en-IN", { timeZone: "Asia/Kolkata" })],
+      ["Blockchain TX",  bidder.blockchainTxId || "Not registered on blockchain"],
+      ["Record Hash",   bidder.blockchainHash ? bidder.blockchainHash.substring(0, 32) + "..." : "—"],
     ];
 
     for (const [label, value] of profileFields) {
@@ -605,6 +621,7 @@ router.get("/:id/report", requireAuth, async (req, res, next) => {
       doc.fill("#1A1F27").font("Helvetica").fontSize(9).text(value || "—", 200, y);
       y += 16;
     }
+
 
     y += 10;
 
