@@ -25,16 +25,21 @@ const prisma = new PrismaClient();
 router.post("/login", validate(LoginSchema), async (req, res, next) => {
   try {
     const { email, password } = req.body;
+    console.log(`[AUTH] Incoming login request for email: "${email}"`);
 
     const officer = await prisma.officer.findUnique({ where: { email } });
     if (!officer) {
+      console.log(`[AUTH] User lookup result: Officer NOT found for email: "${email}"`);
       // Constant-time response — don't leak whether the email exists
       await bcrypt.hash("dummy", 10);
       return res.status(401).json({ error: "Invalid email or password." });
     }
 
+    console.log(`[AUTH] User lookup result: Found officer ID "${officer.id}" (${officer.name})`);
+
     const match = await bcrypt.compare(password, officer.passwordHash);
     if (!match) {
+      console.log(`[AUTH] Password verification failed for email: "${email}"`);
       return res.status(401).json({ error: "Invalid email or password." });
     }
 
@@ -43,11 +48,14 @@ router.post("/login", validate(LoginSchema), async (req, res, next) => {
       expiresIn: config.JWT_EXPIRES_IN,
     });
 
+    console.log(`[AUTH] Successful login for officer: "${officer.email}" (${officer.name})`);
+
     return res.json({
       token,
       officer: { id: officer.id, email: officer.email, name: officer.name },
     });
   } catch (err) {
+    console.error(`[AUTH ERROR] Database or authentication error during login for "${req.body?.email}":`, err.message);
     next(err);
   }
 });

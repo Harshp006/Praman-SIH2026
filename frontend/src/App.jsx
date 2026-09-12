@@ -7,6 +7,7 @@ import AddBidder from './pages/AddBidder';
 import AuditTrail from './pages/AuditTrail';
 import EditBidder from './pages/EditBidder';
 import TenderView from './pages/TenderView';
+import ApiDocs from './pages/ApiDocs';
 import Navbar from './components/Navbar';
 import api from './api';
 import './index.css';
@@ -86,6 +87,7 @@ function App() {
             <Route path="/" element={<Dashboard />} />
             <Route path="/add-bidder" element={<AddBidder />} />
             <Route path="/audit-trail" element={<AuditTrail />} />
+            <Route path="/api-docs" element={<ApiDocs />} />
             <Route path="/tenders/:tenderId" element={<TenderView />} />
             <Route path="/bidders/:id" element={<BidderView />} />
             <Route path="/bidders/:id/edit" element={<EditBidder />} />

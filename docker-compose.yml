@@ -36,17 +36,20 @@ services:
       PORT: "4000"
       UPLOADS_DIR: "/uploads"
       GEM_API_KEY: "my_secret_key_123"
+      PRAMAN_API_KEY: "praman_demo_secure_key_2026"
     ports:
-      - "8081:4000"  # host 8081 → container 4000
+      - "4000:4000"  # host 4000 → container 4000
     volumes:
       - uploads_data:/uploads  # persist uploaded documents across restarts
     command: >
       sh -c "
+        node src/scripts/ensure-tenders.js &&
         npx prisma db push --skip-generate &&
         node src/seed.js &&
         node src/scripts/seed-bidders.js &&
         node src/index.js
       "
+
 
   frontend:
     build: ./frontend
@@ -55,7 +58,7 @@ services:
     depends_on:
       - backend
     ports:
-      - "8085:3000"  # host 8085 → container 3000
+      - "3001:3000"  # host 3001 → container 3000
     # CMD intentionally left as Dockerfile default — Layer 3 will override
 
   # Prisma Studio — browse DB at http://localhost:8555

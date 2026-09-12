@@ -5,6 +5,16 @@
 
 "use strict";
 
+try {
+  require("dotenv").config();
+} catch (_e) {
+  // dotenv optional if process.env provided directly
+}
+
+if (!process.env.DATABASE_URL) {
+  process.env.DATABASE_URL = "postgresql://praman:praman_local@localhost:7432/praman?schema=public";
+}
+
 module.exports = {
   PORT:            process.env.PORT            || "4000",
   NODE_ENV:        process.env.NODE_ENV        || "development",
@@ -25,4 +35,7 @@ module.exports = {
 
   // Uploads directory (absolute inside container; relative on host dev)
   UPLOADS_DIR: process.env.UPLOADS_DIR || "/uploads",
+
+  // PRAMAN API Key for external system integration (e.g. GeM)
+  PRAMAN_API_KEY: process.env.PRAMAN_API_KEY || "praman_demo_secure_key_2026",
 };

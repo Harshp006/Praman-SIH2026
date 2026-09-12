@@ -7,7 +7,7 @@ const Badge = ({ children, variant = 'default', size = 'md' }) => {
     case 'success': case 'pass': case 'approved': case 'low':
       bg = '#DCFCE7'; color = '#16A34A'; border = '#86EFAC';
       break;
-    case 'warning': case 'warn': case 'pending_review': case 'under_review': case 'medium':
+    case 'warning': case 'warn': case 'pending_review': case 'flagged_for_review': case 'under_review': case 'medium':
       bg = '#FEF3C7'; color = '#D97706'; border = '#FCD34D';
       break;
     case 'danger': case 'fail': case 'rejected': case 'high':

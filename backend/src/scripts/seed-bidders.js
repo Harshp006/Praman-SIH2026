@@ -292,6 +292,11 @@ async function seedBidders() {
         },
       });
 
+      // Seed realistic documents for this bidder
+      const { generateDocumentsForBidder } = require('./seed-documents');
+      const docsToCreate = generateDocumentsForBidder(bidder, i);
+      await prisma.document.createMany({ data: docsToCreate });
+
       if (isPreVerified) {
         // Generate checks with high quality
         const quality = 0.8 + Math.random() * 0.2; // 0.8 to 1.0

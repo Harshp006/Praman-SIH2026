@@ -1,5 +1,5 @@
 import React from 'react';
-import { ShieldCheck, LogOut, Bell, User, LayoutDashboard, PlusCircle, Shield, FileText } from 'lucide-react';
+import { ShieldCheck, LogOut, Bell, User, LayoutDashboard, PlusCircle, Shield, FileText, Code } from 'lucide-react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 
 const Navbar = ({ officer, onLogout }) => {
@@ -19,6 +19,7 @@ const Navbar = ({ officer, onLogout }) => {
     { path: '/',            label: 'Dashboard',  icon: LayoutDashboard },
     { path: '/add-bidder',  label: 'Add Bidder', icon: PlusCircle },
     { path: '/audit-trail', label: 'Audit Trail', icon: Shield },
+    { path: '/api-docs', label: 'API Docs', icon: Code },
   ];
 
   return (

@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import {
   ArrowLeft, RefreshCw, FileText, Check, X, Flag,
-  Building2, Brain, Edit, Trash2, Download,
+  Building2, Brain, Edit, Trash2, Download, Eye, Upload, Plus,
   Wifi, WifiOff, AlertCircle, Clock, CheckCircle2,
   Shield, ShieldCheck, ShieldAlert
 } from 'lucide-react';
@@ -13,7 +13,7 @@ import Badge from '../components/Badge';
 
 const OllamaStatus = () => {
   const [status, setStatus] = useState(null);
-  const [model, setModel]   = useState('');
+  const [model, setModel] = useState('');
 
   useEffect(() => {
     api.get('/health')
@@ -40,11 +40,11 @@ const OllamaStatus = () => {
 
 const CheckIcon = ({ state }) => {
   const map = {
-    pass:    { bg: 'var(--status-approved)', icon: <Check size={13} /> },
-    fail:    { bg: 'var(--status-rejected)', icon: <X size={13} /> },
-    warn:    { bg: 'var(--status-pending)',  icon: <Flag size={11} /> },
+    pass: { bg: 'var(--status-approved)', icon: <Check size={13} /> },
+    fail: { bg: 'var(--status-rejected)', icon: <X size={13} /> },
+    warn: { bg: 'var(--status-pending)', icon: <Flag size={11} /> },
     missing: { bg: '#9CA3AF', icon: <span style={{ fontSize: '10px', fontWeight: 700 }}>?</span> },
-    na:      { bg: '#CBD5E1', icon: <span style={{ fontSize: '10px', fontWeight: 700 }}>N/A</span> },
+    na: { bg: '#CBD5E1', icon: <span style={{ fontSize: '10px', fontWeight: 700 }}>N/A</span> },
   };
   const m = map[state] || map.missing;
   return (
@@ -79,16 +79,16 @@ const BidderView = () => {
   const { id } = useParams();
   const navigate = useNavigate();
 
-  const [bidder,   setBidder]   = useState(null);
-  const [loading,  setLoading]  = useState(true);
+  const [bidder, setBidder] = useState(null);
+  const [loading, setLoading] = useState(true);
   const [verifying, setVerifying] = useState(false);
   const [recommending, setRecommending] = useState(false);
-  const [submitting,   setSubmitting]   = useState(false);
-  const [deleting,     setDeleting]     = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [deleting, setDeleting] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
-  const [decisionNote,  setDecisionNote]  = useState('');
-  const [actionError,   setActionError]   = useState('');
-  const [successMsg,    setSuccessMsg]    = useState('');
+  const [decisionNote, setDecisionNote] = useState('');
+  const [actionError, setActionError] = useState('');
+  const [successMsg, setSuccessMsg] = useState('');
 
   // Blockchain States
   const [bcRegistering, setBcRegistering] = useState(false);
@@ -127,9 +127,24 @@ const BidderView = () => {
     }
   };
 
-  // Approve / Reject
+  // Generate Recommendation
+  const handleRecommend = async () => {
+    setActionError('');
+    setRecommending(true);
+    try {
+      const r = await api.post(`/bidders/${id}/recommend`);
+      setBidder(prev => ({ ...prev, recommendation: r.data.recommendation }));
+      flash('AI recommendation generated successfully.');
+    } catch (err) {
+      setActionError(err.response?.data?.error || 'Recommendation generation failed.');
+    } finally {
+      setRecommending(false);
+    }
+  };
+
+  // Approve / Reject / Flag / Overturn
   const submitDecision = async (action) => {
-    if (!decisionNote.trim()) {
+    if (action !== 'overturn' && !decisionNote.trim()) {
       setActionError('A decision note / justification is required.');
       return;
     }
@@ -141,7 +156,14 @@ const BidderView = () => {
       setDecisionNote('');
       // Refresh audit logs
       await fetchBidder();
-      flash(`Bidder ${action}d successfully.`);
+
+      let actionLabel = action;
+      if (action === 'approve') actionLabel = 'approved';
+      if (action === 'reject') actionLabel = 'rejected';
+      if (action === 'flag_review') actionLabel = 'flagged for review';
+      if (action === 'overturn') actionLabel = 'overturned';
+
+      flash(`Bidder decision '${actionLabel}' submitted successfully.`);
     } catch (err) {
       setActionError(err.response?.data?.error || 'Decision submission failed. Please log out and log back in.');
     } finally {
@@ -232,6 +254,77 @@ const BidderView = () => {
     }
   };
 
+  // View Single Document PDF in new browser tab
+  const handleViewDoc = (docId) => {
+    const token = localStorage.getItem('praman_token');
+    const url = `${api.defaults.baseURL}/bidders/${id}/documents/${docId}/view`;
+    fetch(url, { headers: { Authorization: `Bearer ${token}` } })
+      .then(res => {
+        if (!res.ok) throw new Error('Document view failed');
+        return res.blob();
+      })
+      .then(blob => {
+        const blobUrl = URL.createObjectURL(blob);
+        window.open(blobUrl, '_blank');
+      })
+      .catch(() => {
+        setActionError('Failed to view document PDF.');
+      });
+  };
+
+  // Download Single Document PDF file
+  const handleDownloadDoc = (docId, fileName) => {
+    const token = localStorage.getItem('praman_token');
+    const url = `${api.defaults.baseURL}/bidders/${id}/documents/${docId}/download`;
+    fetch(url, { headers: { Authorization: `Bearer ${token}` } })
+      .then(res => {
+        if (!res.ok) throw new Error('Document download failed');
+        return res.blob();
+      })
+      .then(blob => {
+        const blobUrl = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = blobUrl;
+        a.download = fileName || 'Document.pdf';
+        a.click();
+        URL.revokeObjectURL(blobUrl);
+      })
+      .catch(() => {
+        setActionError('Failed to download document PDF.');
+      });
+  };
+
+  // Upload Additional Document
+  const uploadDocInputRef = React.useRef(null);
+  const [uploadingDoc, setUploadingDoc] = useState(false);
+
+  const handleUploadNewDoc = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setUploadingDoc(true);
+    setActionError('');
+    setSuccessMsg('');
+
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('type', file.name.split('.')[0].replace(/[^a-zA-Z0-9]/g, ' '));
+
+      await api.post(`/bidders/${id}/documents`, formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      });
+
+      setSuccessMsg(`Document '${file.name}' uploaded successfully.`);
+      await fetchBidder();
+    } catch (err) {
+      setActionError(err.response?.data?.error || 'Document upload failed.');
+    } finally {
+      setUploadingDoc(false);
+      if (uploadDocInputRef.current) uploadDocInputRef.current.value = '';
+    }
+  };
+
   if (loading) {
     return (
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '60vh', flexDirection: 'column', gap: '1rem' }}>
@@ -251,7 +344,7 @@ const BidderView = () => {
   }
 
   const isVerified = bidder.checks && bidder.checks.length > 0;
-  const hasRec     = !!bidder.recommendation;
+  const hasRec = !!bidder.recommendation;
 
   return (
     <div>
@@ -406,25 +499,212 @@ const BidderView = () => {
             )}
           </div>
 
-          {/* Documents */}
-          <div>
-            <div className="section-bar">UPLOADED DOCUMENTS — {bidder.documents?.length || 0} FILES</div>
-            <div style={{ border: '1px solid var(--border)', borderTop: 'none', backgroundColor: 'var(--surface)' }}>
-              {!bidder.documents?.length ? (
-                <div className="text-center text-muted font-bold uppercase text-sm p-6">No documents uploaded.</div>
-              ) : bidder.documents.map((doc, idx) => (
-                <div key={doc.id} className="flex items-center gap-3 p-3"
-                  style={{ borderBottom: idx !== bidder.documents.length - 1 ? '1px solid var(--border)' : 'none' }}>
-                  <FileText size={16} style={{ color: 'var(--navy-dark)', flexShrink: 0 }} />
-                  <div className="flex-1">
-                    <div className="font-bold text-sm uppercase">{doc.type} Certificate</div>
-                    <div className="text-xs text-muted">{doc.fileName}</div>
-                  </div>
-                  <span style={{ fontSize: '9px', fontWeight: 700, padding: '2px 6px', border: '1px solid var(--status-approved)', color: 'var(--status-approved)', borderRadius: '2px' }}>
-                    UPLOADED
-                  </span>
+          {/* Documents Section */}
+          <div style={{
+            border: '1px solid var(--border)',
+            borderRadius: '2px',
+            backgroundColor: 'var(--surface)',
+            boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
+            overflow: 'hidden'
+          }}>
+            {/* Header */}
+            <div style={{
+              backgroundColor: 'var(--navy-dark)',
+              color: 'white',
+              padding: '1.25rem 1.5rem',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              flexWrap: 'wrap',
+              gap: '1rem'
+            }}>
+              <div>
+                <div style={{
+                  fontSize: '1rem',
+                  fontWeight: 700,
+                  letterSpacing: '0.5px',
+                  textTransform: 'uppercase'
+                }}>
+                  UPLOADED DOCUMENTS — {bidder.documents?.length || 0} FILES
                 </div>
-              ))}
+                <div style={{
+                  fontSize: '0.8rem',
+                  color: '#C7D0DA',
+                  marginTop: '2px',
+                  fontWeight: 500
+                }}>
+                  Supporting documents submitted by the bidder for this tender.
+                </div>
+              </div>
+
+              <input
+                type="file"
+                ref={uploadDocInputRef}
+                onChange={handleUploadNewDoc}
+                accept=".pdf,.jpg,.jpeg,.png"
+                style={{ display: 'none' }}
+              />
+
+              <button
+                onClick={() => uploadDocInputRef.current?.click()}
+                disabled={uploadingDoc}
+                className="btn"
+                style={{
+                  backgroundColor: 'var(--gold)',
+                  color: 'var(--navy-dark)',
+                  fontWeight: 700,
+                  fontSize: '0.75rem',
+                  padding: '0.4rem 0.85rem',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '0.4rem',
+                  border: 'none',
+                  borderRadius: '2px'
+                }}
+              >
+                {uploadingDoc ? (
+                  <span className="spinner" style={{ width: 12, height: 12, borderWidth: 2, borderColor: 'var(--navy-dark)', borderTopColor: 'transparent' }}></span>
+                ) : (
+                  <Upload size={14} />
+                )}
+                {uploadingDoc ? 'UPLOADING...' : 'UPLOAD DOCUMENT'}
+              </button>
+            </div>
+
+            {/* Document Repository Table */}
+            <div style={{ overflowX: 'auto' }}>
+              {!bidder.documents?.length ? (
+                <div className="text-center text-muted font-bold uppercase text-sm p-8">
+                  No documents uploaded for this bidder.
+                </div>
+              ) : (
+                <table className="data-table" style={{ margin: 0, width: '100%', borderCollapse: 'collapse' }}>
+                  <thead>
+                    <tr style={{ backgroundColor: 'var(--surface-muted)', borderBottom: '1px solid var(--border)' }}>
+                      <th style={{ width: '40px', padding: '0.75rem 1rem', textAlign: 'center', fontSize: '0.7rem', fontWeight: 700, color: 'var(--text-muted)' }}>#</th>
+                      <th style={{ padding: '0.75rem 1rem', fontSize: '0.7rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase' }}>Document Name</th>
+                      <th style={{ padding: '0.75rem 1rem', fontSize: '0.7rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', width: '120px' }}>File Details</th>
+                      <th style={{ padding: '0.75rem 1rem', fontSize: '0.7rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', width: '110px' }}>Uploaded Date</th>
+                      <th style={{ padding: '0.75rem 1rem', fontSize: '0.7rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', width: '120px' }}>Status</th>
+                      <th style={{ padding: '0.75rem 1rem', fontSize: '0.7rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', textAlign: 'right', width: '170px' }}>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {bidder.documents.map((doc, idx) => {
+                      const formattedTitle = doc.type.toLowerCase().includes('certificate') ||
+                        doc.type.toLowerCase().includes('undertaking') ||
+                        doc.type.toLowerCase().includes('declaration') ||
+                        doc.type.toLowerCase().includes('card') ||
+                        doc.type.toLowerCase().includes('letter')
+                        ? doc.type
+                        : `${doc.type} Certificate`;
+
+                      const uploadDateStr = doc.uploadedAt
+                        ? new Date(doc.uploadedAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })
+                        : 'Recent';
+
+                      return (
+                        <tr key={doc.id} style={{ borderBottom: idx !== bidder.documents.length - 1 ? '1px solid var(--border)' : 'none', backgroundColor: idx % 2 === 0 ? 'var(--surface)' : '#FAFCFE' }}>
+                          {/* Index */}
+                          <td style={{ padding: '0.85rem 1rem', textAlign: 'center', fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-muted)' }}>
+                            {idx + 1}
+                          </td>
+
+                          {/* Document Name & Filename */}
+                          <td style={{ padding: '0.85rem 1rem' }}>
+                            <div className="flex items-start gap-3">
+                              <div style={{
+                                padding: '6px',
+                                backgroundColor: '#EEF2F6',
+                                borderRadius: '4px',
+                                color: 'var(--navy-dark)',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                flexShrink: 0,
+                                marginTop: '2px'
+                              }}>
+                                <FileText size={18} />
+                              </div>
+                              <div style={{ minWidth: 0, flex: 1 }}>
+                                <div className="font-bold text-sm uppercase truncate" style={{ color: 'var(--navy-dark)', letterSpacing: '0.3px' }}>
+                                  {formattedTitle}
+                                </div>
+                                <div className="text-xs text-muted truncate" style={{ fontFamily: 'monospace', fontSize: '0.75rem', marginTop: '2px', maxWidth: '320px' }} title={doc.fileName}>
+                                  {doc.fileName}
+                                </div>
+                              </div>
+                            </div>
+                          </td>
+
+                          {/* File Details */}
+                          <td style={{ padding: '0.85rem 1rem', verticalAlign: 'middle' }}>
+                            <span style={{
+                              fontSize: '10px',
+                              fontWeight: 700,
+                              padding: '2px 8px',
+                              backgroundColor: '#F1F5F9',
+                              color: '#475569',
+                              borderRadius: '3px',
+                              letterSpacing: '0.5px',
+                              display: 'inline-block'
+                            }}>
+                              PDF • 420 KB
+                            </span>
+                          </td>
+
+                          {/* Uploaded Date */}
+                          <td style={{ padding: '0.85rem 1rem', verticalAlign: 'middle', fontSize: '0.78rem', fontWeight: 600, color: 'var(--text-muted)' }}>
+                            {uploadDateStr}
+                          </td>
+
+                          {/* Status */}
+                          <td style={{ padding: '0.85rem 1rem', verticalAlign: 'middle' }}>
+                            <span style={{
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              gap: '4px',
+                              fontSize: '10px',
+                              fontWeight: 700,
+                              padding: '3px 8px',
+                              backgroundColor: '#E6F4EA',
+                              color: '#1E7A34',
+                              border: '1px solid #A7F3D0',
+                              borderRadius: '3px',
+                              textTransform: 'uppercase'
+                            }}>
+                              <CheckCircle2 size={11} /> UPLOADED
+                            </span>
+                          </td>
+
+                          {/* Actions */}
+                          <td style={{ padding: '0.85rem 1rem', textAlign: 'right', verticalAlign: 'middle' }}>
+                            <div className="flex items-center justify-end gap-2">
+                              <button
+                                onClick={() => handleViewDoc(doc.id)}
+                                className="btn btn-outline text-xs"
+                                style={{ padding: '0.25rem 0.55rem', gap: '0.3rem', fontSize: '0.7rem', fontWeight: 700 }}
+                                title="View PDF Document in new tab"
+                              >
+                                <Eye size={12} /> VIEW
+                              </button>
+
+                              <button
+                                onClick={() => handleDownloadDoc(doc.id, doc.fileName)}
+                                className="btn btn-outline text-xs"
+                                style={{ padding: '0.25rem 0.55rem', gap: '0.3rem', fontSize: '0.7rem', fontWeight: 700 }}
+                                title="Download PDF File"
+                              >
+                                <Download size={12} /> DOWNLOAD
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              )}
             </div>
           </div>
 
@@ -436,8 +716,8 @@ const BidderView = () => {
                 <div className="text-center text-muted font-bold uppercase text-sm p-6">No audit entries.</div>
               ) : bidder.auditLogs.map((log, idx) => {
                 const isDecision = log.action?.toLowerCase().includes('approved') || log.action?.toLowerCase().includes('rejected');
-                const isVerify   = log.action?.toLowerCase().includes('verification run');
-                const isAI       = log.action?.toLowerCase().includes('ollama') || log.action?.toLowerCase().includes('recommendation');
+                const isVerify = log.action?.toLowerCase().includes('verification run');
+                const isAI = log.action?.toLowerCase().includes('ollama') || log.action?.toLowerCase().includes('recommendation');
 
                 return (
                   <div key={log.id} className="p-4"
@@ -521,62 +801,112 @@ const BidderView = () => {
                   {bidder.recommendation}
                 </div>
               )}
-
-              {/* Button removed as recommendation is now generated automatically */}
             </div>
           </div>
 
-          {/* Officer Decision */}
-          <div className="card">
-            <div className="card-header" style={{ backgroundColor: 'var(--navy-dark)' }}>
-              <div className="font-bold uppercase text-sm" style={{ color: 'white' }}>⚖ OFFICER DECISION</div>
+            {/* Officer Decision */}
+            <div className="card">
+              <div className="card-header" style={{ backgroundColor: 'var(--navy-dark)' }}>
+                <div className="font-bold uppercase text-sm" style={{ color: 'white' }}>⚖ OFFICER DECISION</div>
+              </div>
+              <div className="card-body">
+                <div className="flex justify-between items-center mb-4">
+                  <span className="font-bold uppercase text-xs text-muted">Current Status</span>
+                  <Badge variant={bidder.status}>{bidder.status.replace(/_/g, ' ')}</Badge>
+                </div>
+
+                <div className="callout mb-4 text-xs font-bold uppercase"
+                  style={{ borderLeftColor: 'var(--status-pending)', backgroundColor: '#FFFBEB', color: 'var(--navy-dark)' }}>
+                  The final decision to approve or reject this bidder rests solely with the officer. The AI recommendation is advisory only.
+                </div>
+
+                <div className="mb-3">
+                  <label className="text-xs font-bold mb-1 block uppercase text-muted">
+                    Officer Justification Note <span style={{ color: 'var(--status-rejected)' }}>*</span>
+                  </label>
+                  <textarea
+                    className="input" rows="3"
+                    placeholder={
+                      bidder.status === 'approved' || bidder.status === 'rejected'
+                        ? "Decision finalized. Click Overturn Decision to select another option."
+                        : "Enter your justification for this decision. This will be permanently recorded in the audit log..."
+                    }
+                    value={decisionNote}
+                    onChange={e => setDecisionNote(e.target.value)}
+                    disabled={submitting || bidder.status === 'approved' || bidder.status === 'rejected'}
+                    style={{ resize: 'vertical' }}
+                  />
+                </div>
+
+                <div className="flex flex-col gap-2">
+                  {/* Initial State / Overturned State: pending_review */}
+                  {bidder.status === 'pending_review' && (
+                    <>
+                      <button
+                        onClick={() => submitDecision('approve')}
+                        disabled={submitting}
+                        className="btn w-full"
+                        style={{ backgroundColor: 'var(--status-approved)', color: 'white', border: 'none', gap: '0.5rem' }}>
+                        {submitting ? <span className="spinner" style={{ width: 14, height: 14, borderWidth: 2 }}></span> : <Check size={15} />}
+                        APPROVE BIDDER
+                      </button>
+                      <button
+                        onClick={() => submitDecision('reject')}
+                        disabled={submitting}
+                        className="btn btn-outline w-full"
+                        style={{ color: 'var(--status-rejected)', borderColor: 'var(--status-rejected)', gap: '0.5rem' }}>
+                        {submitting ? <span className="spinner" style={{ width: 14, height: 14, borderWidth: 2 }}></span> : <X size={15} />}
+                        REJECT BIDDER
+                      </button>
+                      <button
+                        onClick={() => submitDecision('flag_review')}
+                        disabled={submitting}
+                        className="btn btn-outline w-full"
+                        style={{ color: 'var(--status-pending)', borderColor: 'var(--status-pending)', gap: '0.5rem' }}>
+                        {submitting ? <span className="spinner" style={{ width: 14, height: 14, borderWidth: 2 }}></span> : <Flag size={15} />}
+                        FLAG FOR REVIEW
+                      </button>
+                    </>
+                  )}
+
+                  {/* Flagged State: flagged_for_review */}
+                  {bidder.status === 'flagged_for_review' && (
+                    <>
+                      <button
+                        onClick={() => submitDecision('approve')}
+                        disabled={submitting}
+                        className="btn w-full"
+                        style={{ backgroundColor: 'var(--status-approved)', color: 'white', border: 'none', gap: '0.5rem' }}>
+                        {submitting ? <span className="spinner" style={{ width: 14, height: 14, borderWidth: 2 }}></span> : <Check size={15} />}
+                        APPROVE BIDDER
+                      </button>
+                      <button
+                        onClick={() => submitDecision('reject')}
+                        disabled={submitting}
+                        className="btn btn-outline w-full"
+                        style={{ color: 'var(--status-rejected)', borderColor: 'var(--status-rejected)', gap: '0.5rem' }}>
+                        {submitting ? <span className="spinner" style={{ width: 14, height: 14, borderWidth: 2 }}></span> : <X size={15} />}
+                        REJECT BIDDER
+                      </button>
+                    </>
+                  )}
+
+                  {/* Decided States: approved or rejected */}
+                  {(bidder.status === 'approved' || bidder.status === 'rejected') && (
+                    <button
+                      onClick={() => submitDecision('overturn')}
+                      disabled={submitting}
+                      className="btn btn-outline w-full"
+                      style={{ color: 'var(--navy-dark)', borderColor: 'var(--navy-dark)', gap: '0.5rem' }}>
+                      {submitting ? <span className="spinner" style={{ width: 14, height: 14, borderWidth: 2 }}></span> : <RefreshCw size={15} />}
+                      OVERTURN DECISION
+                    </button>
+                  )}
+                </div>
+              </div>
             </div>
-            <div className="card-body">
-              <div className="flex justify-between items-center mb-4">
-                <span className="font-bold uppercase text-xs text-muted">Current Status</span>
-                <Badge variant={bidder.status}>{bidder.status.replace(/_/g, ' ')}</Badge>
-              </div>
 
-              <div className="callout mb-4 text-xs font-bold uppercase"
-                style={{ borderLeftColor: 'var(--status-pending)', backgroundColor: '#FFFBEB', color: 'var(--navy-dark)' }}>
-                The final decision to approve or reject this bidder rests solely with the officer. The AI recommendation is advisory only.
-              </div>
-
-              <div className="mb-3">
-                <label className="text-xs font-bold mb-1 block uppercase text-muted">
-                  Officer Justification Note <span style={{ color: 'var(--status-rejected)' }}>*</span>
-                </label>
-                <textarea
-                  className="input" rows="3"
-                  placeholder="Enter your justification for this decision. This will be permanently recorded in the audit log..."
-                  value={decisionNote}
-                  onChange={e => setDecisionNote(e.target.value)}
-                  disabled={submitting}
-                  style={{ resize: 'vertical' }}
-                />
-              </div>
-
-              <div className="flex flex-col gap-2">
-                <button
-                  onClick={() => submitDecision('approve')}
-                  disabled={submitting}
-                  className="btn w-full"
-                  style={{ backgroundColor: 'var(--status-approved)', color: 'white', border: 'none', gap: '0.5rem' }}>
-                  {submitting ? <span className="spinner" style={{ width: 14, height: 14, borderWidth: 2 }}></span> : <Check size={15} />}
-                  APPROVE BIDDER
-                </button>
-                <button
-                  onClick={() => submitDecision('reject')}
-                  disabled={submitting}
-                  className="btn btn-outline w-full"
-                  style={{ color: 'var(--status-rejected)', borderColor: 'var(--status-rejected)', gap: '0.5rem' }}>
-                  {submitting ? <span className="spinner" style={{ width: 14, height: 14, borderWidth: 2 }}></span> : <X size={15} />}
-                  REJECT BIDDER
-                </button>
-              </div>
-            </div>
           </div>
-
           {/* Blockchain Audit */}
           {isVerified && (
             <div className="card">
@@ -651,10 +981,8 @@ const BidderView = () => {
               </div>
             </div>
           )}
-
         </div>
       </div>
-    </div>
   );
 };
 

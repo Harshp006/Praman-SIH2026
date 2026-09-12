@@ -474,22 +474,50 @@ router.delete("/:id", requireAuth, async (req, res, next) => {
 router.post("/:id/decision", requireAuth, async (req, res, next) => {
   try {
     const { action, note } = req.body;
-    if (!action || !["approve", "reject"].includes(action))
-      return res.status(400).json({ error: "action must be 'approve' or 'reject'." });
+    if (!action || !["approve", "reject", "flag_review", "overturn"].includes(action))
+      return res.status(400).json({ error: "action must be 'approve', 'reject', 'flag_review', or 'overturn'." });
 
     const bidder = await prisma.bidder.findUnique({ where: { id: req.params.id } });
     if (!bidder) return notFound(res, req.params.id);
 
-    const newStatus = action === "approve" ? "approved" : "rejected";
+    const currentStatus = bidder.status;
+
+    // Enforce state transitions
+    if (action === "overturn") {
+      if (currentStatus !== "approved" && currentStatus !== "rejected") {
+        return res.status(400).json({ error: "Cannot overturn decision unless bidder is APPROVED or REJECTED." });
+      }
+    } else if (action === "flag_review") {
+      if (currentStatus !== "pending_review") {
+        return res.status(400).json({ error: "Cannot flag for review unless status is pending review." });
+      }
+    } else if (action === "approve" || action === "reject") {
+      if (currentStatus !== "pending_review" && currentStatus !== "flagged_for_review") {
+        return res.status(400).json({ error: `Cannot ${action} bidder when current status is ${currentStatus}.` });
+      }
+    }
+
+    let newStatus;
+    let actionDesc;
+
+    if (action === "approve") {
+      newStatus = "approved";
+      actionDesc = `APPROVED by Officer ${req.officer.name}. Bid forwarded to procurement committee.`;
+    } else if (action === "reject") {
+      newStatus = "rejected";
+      actionDesc = `REJECTED by Officer ${req.officer.name}. Bid rejected based on compliance review.`;
+    } else if (action === "flag_review") {
+      newStatus = "flagged_for_review";
+      actionDesc = `FLAGGED FOR REVIEW by Officer ${req.officer.name}. Deferring decision.`;
+    } else if (action === "overturn") {
+      newStatus = "pending_review";
+      actionDesc = `OVERTURNED decision by Officer ${req.officer.name}. Decision reset to pending review.`;
+    }
 
     await prisma.bidder.update({
       where: { id: bidder.id },
       data:  { status: newStatus },
     });
-
-    const actionDesc = action === "approve"
-      ? `APPROVED by Officer ${req.officer.name}. Bid forwarded to procurement committee.`
-      : `REJECTED by Officer ${req.officer.name}. Bid rejected based on compliance review.`;
 
     await prisma.auditLog.create({
       data: {
@@ -503,12 +531,20 @@ router.post("/:id/decision", requireAuth, async (req, res, next) => {
     // AUTO REJECT LOGIC
     if (action === "approve") {
       const otherBidders = await prisma.bidder.findMany({
-        where: { tenderId: bidder.tenderId, status: "pending_review", id: { not: bidder.id } }
+        where: {
+          tenderId: bidder.tenderId,
+          status: { in: ["pending_review", "flagged_for_review"] },
+          id: { not: bidder.id }
+        }
       });
       
       if (otherBidders.length > 0) {
         await prisma.bidder.updateMany({
-          where: { tenderId: bidder.tenderId, status: "pending_review", id: { not: bidder.id } },
+          where: {
+            tenderId: bidder.tenderId,
+            status: { in: ["pending_review", "flagged_for_review"] },
+            id: { not: bidder.id }
+          },
           data: { status: "rejected" }
         });
 
@@ -535,8 +571,112 @@ router.post("/:id/decision", requireAuth, async (req, res, next) => {
       });
     }
 
-    res.json({ message: `Bid ${action}d successfully.`, id: bidder.id, status: newStatus });
+    res.json({ message: `Bid decision applied successfully.`, id: bidder.id, status: newStatus });
   } catch (err) { next(err); }
+});
+
+// ─── GET /api/bidders/:bidderId/documents/:documentId/view ────────────────────
+
+router.get("/:bidderId/documents/:documentId/view", requireAuth, async (req, res, next) => {
+  try {
+    const { bidderId, documentId } = req.params;
+    const document = await prisma.document.findFirst({
+      where: { id: documentId, bidderId: bidderId },
+      include: { bidder: true },
+    });
+
+    if (!document) {
+      return res.status(404).json({ error: "Document not found or access denied." });
+    }
+
+    res.setHeader("Content-Type", "application/pdf");
+    res.setHeader("Content-Disposition", `inline; filename="${document.fileName}"`);
+
+    const diskPath = path.isAbsolute(document.filePath)
+      ? document.filePath
+      : path.join(config.UPLOADS_DIR, bidderId, path.basename(document.filePath));
+
+    if (fs.existsSync(diskPath)) {
+      return fs.createReadStream(diskPath).pipe(res);
+    }
+
+    const { buildDemoPDF } = require("../utils/pdfGenerator");
+    buildDemoPDF(res, document, document.bidder);
+  } catch (err) {
+    next(err);
+  }
+});
+
+// ─── GET /api/bidders/:bidderId/documents/:documentId/download ────────────────
+
+router.get("/:bidderId/documents/:documentId/download", requireAuth, async (req, res, next) => {
+  try {
+    const { bidderId, documentId } = req.params;
+    const document = await prisma.document.findFirst({
+      where: { id: documentId, bidderId: bidderId },
+      include: { bidder: true },
+    });
+
+    if (!document) {
+      return res.status(404).json({ error: "Document not found or access denied." });
+    }
+
+    res.setHeader("Content-Type", "application/pdf");
+    res.setHeader("Content-Disposition", `attachment; filename="${document.fileName}"`);
+
+    const diskPath = path.isAbsolute(document.filePath)
+      ? document.filePath
+      : path.join(config.UPLOADS_DIR, bidderId, path.basename(document.filePath));
+
+    if (fs.existsSync(diskPath)) {
+      return fs.createReadStream(diskPath).pipe(res);
+    }
+
+    const { buildDemoPDF } = require("../utils/pdfGenerator");
+    buildDemoPDF(res, document, document.bidder);
+  } catch (err) {
+    next(err);
+  }
+});
+
+// ─── POST /api/bidders/:id/documents (Upload single additional document) ──────
+
+router.post("/:id/documents", requireAuth, (req, res, next) => {
+  upload.single("file")(req, res, async (uploadErr) => {
+    if (uploadErr) return res.status(400).json({ error: uploadErr.message });
+    if (!req.file) return res.status(400).json({ error: "No document file uploaded." });
+
+    try {
+      const bidder = await prisma.bidder.findUnique({ where: { id: req.params.id } });
+      if (!bidder) return notFound(res, req.params.id);
+
+      const type = req.body.type || "Additional Document";
+      const originalName = req.file.originalname;
+      const newPath = moveUploadedFile(req.file.path, bidder.id, originalName);
+
+      const newDoc = await prisma.document.create({
+        data: {
+          bidderId: bidder.id,
+          type,
+          fileName: originalName,
+          filePath: newPath,
+        },
+      });
+
+      await prisma.auditLog.create({
+        data: {
+          bidderId: bidder.id,
+          officerId: req.officer.id,
+          actor: req.officer.name,
+          action: `Additional document '${originalName}' (${type}) uploaded by ${req.officer.name}.`,
+        },
+      });
+
+      res.status(201).json(newDoc);
+    } catch (err) {
+      next(err);
+    }
+  });
 });
 
 // ─── GET /api/bidders/:id/audit ───────────────────────────────────────────────
